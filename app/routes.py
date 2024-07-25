@@ -6,7 +6,9 @@ from flask import render_template, flash, request, redirect, url_for
 from flask_login import login_user, login_required, logout_user, current_user
 from datetime import date, datetime
 import bcrypt
+from itsdangerous import URLSafeTimedSerializer
 
+s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 @app.route("/", methods=["GET", "POST"])    
 @app.route("/home", methods=["GET", "POST"])
