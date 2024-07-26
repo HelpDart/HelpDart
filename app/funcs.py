@@ -1,4 +1,4 @@
-from app import app, db
+from app import app, db, mail, Serializer
 from app.models import Organization, Client, Event
 from flask_login import current_user
 from flask import flash, redirect, url_for
@@ -9,6 +9,8 @@ from PIL import Image
 from email_validator import validate_email, EmailNotValidError
 import bcrypt
 import os
+from flask_mail import Message
+
 
 def get_badge_colors():
     badge_colors = ["bg-primary", "bg-secondary", "bg-success", "bg-warning", "bg-info", "bg-danger"]
@@ -24,6 +26,19 @@ def check_organization_status():
     else:
         flash("You are not an administrator for an organization. Please contact your organization if you think this is a mistake.", "warning")
         return redirect(url_for("home"))
+
+def check_authenticated_email():
+    authenticated = False
+    if current_user.is_confirmed == False:
+        token = str(Serializer.dumps(current_user.email, salt="email-confirmation"))
+        send_authentication_email(current_user.email, token)
+        flash("Your account has not been activated yet. An email has just been sent to you to activate your account.", "primary")
+        authenticated = False
+        return redirect(url_for("home"))
+    else:
+        authenticated = True
+
+    return authenticated
 
 def check_age(dob, event_obj):
     today = date.today()
@@ -124,6 +139,18 @@ def get_all_organization_objs():
         all_org_objs.append(org)
 
     return all_org_objs
+
+def send_authentication_email(user_email, token):
+    msg = Message('Account Activation', sender=app.config['MAIL_USERNAME'], recipients=[user_email])
+    msg.body = f'''
+
+    Thank you for signing up! To activate your account, please follow the link bellow:
+
+    {url_for("confirm_email", token=token, _external=True)}
+    
+    '''
+    
+    mail.send(msg)
 
 def encrypt_password(password):
     new_password = ""

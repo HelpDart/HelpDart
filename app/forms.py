@@ -95,4 +95,4 @@ class OrganizationInforForm(FlaskForm):
     org_image = FileField("Organization Image:", validators=[FileAllowed(['jpg', 'png']), InputRequired()])
 
     submit = SubmitField("Save")
-
+    

@@ -3,7 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 import os
 from dotenv import load_dotenv, find_dotenv
-from flask_mail import Mail, Message
+from flask_mail import Mail
+from itsdangerous import URLSafeTimedSerializer
 
 
 db = SQLAlchemy()
@@ -13,7 +14,7 @@ def create_app():
     
     load_dotenv(find_dotenv())
 
-    app.config["SECRET_KEY"] = os.environ.get("HELPDART_SECRET_KEY_FLASK")
+    app.config["SECRET_KEY"] = os.environ.get("HD_SECRET_KEY_FLASK")
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///site.db"
 
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -37,5 +38,7 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 mail = Mail(app)
+
+Serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
 from app import routes

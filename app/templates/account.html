@@ -53,6 +53,9 @@
                     <img class="rounded-circle" src="{{ url_for('static', filename='images/default_user.jpg') }}" style="width: 125px; height: 125px;">
                     <figcaption>
                         <p class="mt-3 text-center">
+                            {% if current_user.is_confirmed == False %}
+                                <small class="text-danger">Email not Confirmed</small>
+                            {% endif %}
                             {% if current_user.is_organization %}
                                 <small class="text-success">Organization Account</small>
                             {% endif %}
@@ -75,6 +78,24 @@
             <hr>
         </div>
         <div>
+            {% if current_user.is_confirmed == False %}
+                <div class="border border-primary p-4">
+                    <div class="text-left">
+                        <h2 style="color: coral;">Email Not Confirmed Yet</h2>
+                        <hr>
+                    </div>
+                    <div>
+                        Since your email has not been confirmed yet, specific account actions will be prohibited.<br>
+                        <span class="text-primary">Please confirm your email by clicking the button below.</span>
+                        <div style="padding-top: 10px;">
+                            <form method="POST" action="" enctype="multipart/form-data" class="text-left">
+                                <a href="{{ url_for('send_confirmation_email') }}" class="btn btn-primary">Confirm Email</a>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div style="padding-top: 10px;"><hr></div>
+            {% endif %}
             <div class="text-left">
                 <h2 style="color: coral; padding-top: 30px;">Update Account Information</h2>
                 <hr>
@@ -166,12 +187,22 @@
                 <p class="text-warning">You still need to fill out information regarding your organization. Click <a href="{{ url_for('orginfo', user_id=current_user.id) }}" target="_blank">here</a> to complete.</p>
             {% elif current_user.is_organization == False and current_user.answered_organization_questions == False %}
 
-            <span class="h4">Organizations</span><br>
-            <span><small>You are not currently part of any organizations or registered as an administrative account.</small></span><br>
-            <div style="padding-top: 20px;"><a style="color: white;" class="btn btn-primary" href="{{ url_for('join_organization') }}">Join Existing Organization</a></div>
-            <span><small>If you are part of an organization, you may join an already created one by clicking the button above and entering the security code given to other registered administrator(s) of your organization</small></span>
+                <span class="h4" style="padding-right: 20px;">Organizations</span>
+                <span><small>You are not currently part of any organizations or registered as an administrative account.</small></span><br>
+                {% if current_user.is_confirmed == False %}
+                    <div style="padding-top: 30px;">
+                        <button style="color: white;" class="btn btn-primary" disabled>Join Existing Organization</button>
+                        <span class="text-danger" style="padding-left: 20px;">Your email has not been confirmed yet.</span>
+                    </div>
+                    <small style="padding-top: 20px;">If you are part of an organization, you may join an already created one by clicking the button above and entering the security code given to other registered administrator(s) of your organization</small>
+                {% else %}
+                    <div style="padding-top: 30px;"><a style="color: white;" class="btn btn-primary" href="{{ url_for('join_organization') }}">Join Existing Organization</a></div>
+                    <span style="padding-top: 15px;"><small>If you are part of an organization, you may join an already created one by clicking the button above and entering the security code given to other registered administrator(s) of your organization</small></span>
+                {% endif %}
             {% endif %}
         {% endif %}
+        <div style="padding-top: 10px;"><hr></div>
+
     </div>
 
 {% endblock main %}

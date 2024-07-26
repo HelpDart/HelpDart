@@ -1,14 +1,13 @@
-from app import app, db
+from app import app, db, Serializer
 from app.models import Client, Organization, Event
 from app.forms import LoginForm, RegisterForm, UpdateAccountForm, JoinExistingOrganizationForm, CreateNewPostForm, EditPostBtn, DeletePostBtn, EditPostForm, EventSignUpForm, OrganizationInforForm
-from app.funcs import check_organization_status, check_age, check_max_participants_reached, get_random_code, save_picture, get_keywords_dict, check_email, email_unique, check_password, get_is_organization_value, get_all_organization_objs, encrypt_password, get_all_emails, check_for_not_active_events, string_to_list
+from app.funcs import check_organization_status, check_age, check_max_participants_reached, get_random_code, save_picture, get_keywords_dict, check_email, email_unique, check_password, get_is_organization_value, get_all_organization_objs, encrypt_password, get_all_emails, check_for_not_active_events, string_to_list, send_authentication_email, check_authenticated_email
 from flask import render_template, flash, request, redirect, url_for
 from flask_login import login_user, login_required, logout_user, current_user
 from datetime import date, datetime
 import bcrypt
-from itsdangerous import URLSafeTimedSerializer
+from itsdangerous import SignatureExpired, BadTimeSignature
 
-s = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 @app.route("/", methods=["GET", "POST"])    
 @app.route("/home", methods=["GET", "POST"])
@@ -16,8 +15,9 @@ def home():
     check_for_not_active_events()
     all_events = Event.query.filter_by(is_active=True).all()
     sign_up_form = EventSignUpForm()
-
     if request.method == "POST":
+        if check_authenticated_email():
+            pass
         if request.form.get("signupforeventbtn"):
             event_obj = Event.query.filter_by(id=int(request.form.get("signupforeventbtn"))).first()
             dob_worked = check_age(current_user.date_of_birth, event_obj)
@@ -79,7 +79,6 @@ def login():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     form = RegisterForm()
-
     if request.method == "POST":
         user_fullname = form.fullname.data
         user_email = form.email.data
@@ -98,19 +97,35 @@ def register():
         elif password_check == False:
             flash("Your passwords do not match. Please try again.", "warning")
             return redirect(url_for("register"))
-        
-        new_user = Client(is_organization=user_is_organization, full_name=user_fullname, date_of_birth=user_dob, email=user_email, password=encrypt_password(user_password))
-        db.session.add(new_user)
-        db.session.commit()
-        login_user(Client.query.filter_by(email=user_email).first())
-        if user_is_organization == True:
-            flash("Your account has been created. Please fill out the following information about your organization.", "info")
-            return redirect(url_for("orginfo", user_id=new_user.id))
+        elif datetime(int(user_dob[0:4]), int(user_dob[5:7]), int(user_dob[8:])) > datetime(int(str(date.today())[0:4]), int(str(date.today())[5:7]), int(str(date.today())[8:])):
+            flash("That is an invalid date of birth. Please try again.", "warning")
+            return redirect(url_for("register"))
         else:
-            flash("You have been successfully registered!", "success")
+            new_user = Client(is_organization=user_is_organization, is_confirmed=False, full_name=user_fullname, date_of_birth=user_dob, email=user_email, password=encrypt_password(user_password))
+            db.session.add(new_user)
+            db.session.commit()
+
+            token = str(Serializer.dumps(user_email, salt="email-confirmation"))
+            send_authentication_email(user_email, token)
+
+            flash("You have been sent an email to activate your account. Please check your email and follow the link provided.", "primary")
             return redirect(url_for("home"))
 
     return render_template("register.html", form=form)
+
+@app.route("/confirm_email/<token>")
+def confirm_email(token):
+    try:
+        email = Serializer.loads(token, salt="email-confirmation", max_age=300)
+    except (SignatureExpired, BadTimeSignature):
+        flash("Your security token has expired or was incorrect. Please try again.", "info")
+        return redirect(url_for("register"))
+    user_obj = Client.query.filter_by(email=email).first()
+    user_obj.is_confirmed = True
+    db.session.commit()
+    login_user(user_obj)
+    flash(f"Welcome, {current_user.email}. You have been successfully logged in!", "success")
+    return redirect(url_for("home"))
 
 @app.route("/orginfo/<user_id>/", methods=["GET", "POST"])
 @login_required
@@ -120,12 +135,15 @@ def orginfo(user_id):
     page_intro_msg = ""
 
     if user_obj.is_authenticated == True:
-
         if user_obj.answered_organization_questions == False:
             page_intro_msg = "To create your organization, please answer the following questions regarding it."
 
             if request.method == "POST":
                 if form.validate_on_submit():
+
+                    if check_authenticated_email():
+                        pass
+
                     if form.org_image.data:
                         picture_file = save_picture(form.org_image.data)
                         picture_file = f"{app.root_path[51:]}\static\images\{picture_file}"
@@ -161,6 +179,8 @@ def orginfo(user_id):
                 page_intro_msg = "You have already provided information regarding your organization. You may edit that information now."
 
             elif request.method == "POST":
+                if check_authenticated_email():
+                    pass
                 organization_obj.organization_name = form.organization_name.data
                 organization_obj.primary_location = form.primary_location.data
                 organization_obj.mission_statement = form.mission_statement.data
@@ -183,6 +203,18 @@ def orginfo(user_id):
         flash("You must be an organization administrator to access this page.", "warning")
         return redirect(url_for("home"))
 
+@app.route("/send_confirmation_email", methods=["GET", "POST"])
+@login_required
+def send_confirmation_email():
+    if current_user.is_confirmed == False:
+        token = str(Serializer.dumps(current_user.email, salt="email-confirmation"))
+        send_authentication_email(current_user.email, token)
+        flash("Your account has not been activated yet. An email has just been sent to you to activate your account.", "primary")
+        return redirect(url_for("account"))
+    else:
+        flash("Your email has already been confirmed.", "primary")
+        return redirect(url_for("home"))
+
 @app.route("/join_organization", methods=["GET", "POST"])
 @login_required
 def join_organization():
@@ -191,6 +223,10 @@ def join_organization():
 
     if request.method == "POST":
         if form.validate_on_submit():
+
+            if check_authenticated_email():
+                pass
+            
             user_code = form.code.data
 
             for org in org_objs:
@@ -221,7 +257,8 @@ def account():
         form.fullname.data = current_user.full_name
         form.email.data = current_user.email
 
-    else:
+    elif request.method == "POST":
+        
         if form.validate_on_submit():
             new_user_fullname = form.fullname.data
             new_user_email = form.email.data
@@ -243,10 +280,14 @@ def account():
             return redirect(url_for("account"))
         
         if request.form.get("edit_organization_info"):
+            if check_authenticated_email():
+                pass
             flash("You may edit information regarding your organization here.", "info")
             return redirect(url_for("orginfo", user_id=current_user.id))
-
+        
         if request.form.get("remove_from_organization"):
+            if check_authenticated_email():
+                pass
             current_user.is_organization = False
             current_user.organization_id = None
             current_user.answered_organization_questions = False
@@ -261,6 +302,7 @@ def account():
 
 @app.route("/organizations", methods=["GET", "POST"])
 def organizations():
+
     all_organization_objs = get_all_organization_objs()
 
     return render_template("organizations.html", all_organization_objs=all_organization_objs, len=len, type=type, list=list)
@@ -280,7 +322,9 @@ def post():
 
         return render_template("post.html", form=form, current_date=current_date_output, current_time=current_time)
     
-    else:
+    elif request.method == "POST":
+        if check_authenticated_email():
+            pass
         if form.event_img.data:
             picture_file = save_picture(form.event_img.data)
             picture_file = f"{app.root_path[51:]}\static\images\{picture_file}"
@@ -310,6 +354,7 @@ def post():
 @app.route("/view_posts", methods=["GET", "POST"])
 @login_required
 def view_posts():
+    
     if check_organization_status():
         pass
 
@@ -328,6 +373,8 @@ def view_posts():
         inactive_events.append(j)
 
     if request.method == "POST":
+        if check_authenticated_email():
+            pass
         if request.form.get("edit_post_btn"):
             edit_post_id = request.form.get("edit_post_btn")
             return redirect(url_for("edit_post", edit_post_id=edit_post_id))
@@ -343,6 +390,8 @@ def view_posts():
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
 def dashboard():
+    if check_authenticated_email():
+        pass
     if check_organization_status():
         pass
 
@@ -355,6 +404,8 @@ def dashboard():
 @app.route("/delete_post/<delete_post_id>")
 @login_required
 def delete_post(delete_post_id):
+    if check_authenticated_email():
+        pass
     if check_organization_status():
         pass
 
@@ -368,6 +419,7 @@ def delete_post(delete_post_id):
 @app.route("/edit_post/<edit_post_id>", methods=["GET", "POST"])
 @login_required
 def edit_post(edit_post_id):
+    
     if check_organization_status():
         pass
     
@@ -388,6 +440,8 @@ def edit_post(edit_post_id):
         form.description.data = post_obj.event_description
         form.keywords.data = post_obj.event_keywords
     elif request.method == "POST":
+        if check_authenticated_email():
+            pass
         post_obj.event_name = form.name.data
         post_obj.event_startdate = request.form.get("post_startdate")
         post_obj.event_enddate = request.form.get("post_enddate")

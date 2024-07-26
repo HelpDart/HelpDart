@@ -8,6 +8,7 @@ def load_user(user_id):
 class Client(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     is_organization = db.Column(db.Boolean, default=False)
+    is_confirmed = db.Column(db.Boolean, default=False)
 
     full_name = db.Column(db.String(60))
     date_of_birth = db.Column(db.String(60))
