@@ -98,15 +98,8 @@
                                                                     <p class="card-text" style="padding-bottom: 10px;"><b>Category:</b> {{ a_event.event_category }}</p>
                                                                     <div class="text-left" style="padding-bottom: 10px;">
                                                                         <b>Keywords:</b><br>
-                                                                        {% for kw_dict in list_of_keywords_dicts %}
-                                                                            {% for item in kw_dict %}
-                                                                                {% if "warning" in kw_dict[item] or "info" in kw_dict[item] %}
-                                                                                    <span class="badge {{ kw_dict[item] }} text-dark">{{ item }}</span>
-                                                                                {% else %}
-                                                                                    <span class="badge {{ kw_dict[item] }} text-light">{{ item }}</span>
-                                                                                {% endif %}
-                                                                            {% endfor %}
-                                                                        {% endfor %}
+                                                                        {{ a_event.event_keywords }}
+                                                                        
                                                                     </div>
                                                                 </div>
                                                             </div>

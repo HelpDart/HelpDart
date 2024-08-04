@@ -1,12 +1,13 @@
 from app import app, db, Serializer
-from app.models import Client, Organization, Event
-from app.forms import LoginForm, RegisterForm, UpdateAccountForm, JoinExistingOrganizationForm, CreateNewPostForm, EditPostBtn, DeletePostBtn, EditPostForm, EventSignUpForm, OrganizationInforForm
-from app.funcs import check_organization_status, check_age, check_max_participants_reached, get_random_code, save_picture, get_keywords_dict, check_email, email_unique, check_password, get_is_organization_value, get_all_organization_objs, encrypt_password, get_all_emails, check_for_not_active_events, string_to_list, send_authentication_email, check_authenticated_email
+from app.models import Client, Organization, Event, Keyword
+from app.forms import LoginForm, RegisterForm, UpdateAccountForm, JoinExistingOrganizationForm, CreateNewPostForm, EditPostBtn, DeletePostBtn, EditPostForm, EventSignUpForm, OrganizationInforForm, FilterEventsForm
+from app.funcs import check_organization_status, check_age, check_max_participants_reached, get_random_code, save_picture, check_email, check_password, get_is_organization_value, get_all_organization_objs, encrypt_password, get_all_emails, check_for_not_active_events, string_to_list, send_authentication_email, check_authenticated_email, get_badge_colors, color_exists
 from flask import render_template, flash, request, redirect, url_for
 from flask_login import login_user, login_required, logout_user, current_user
 from datetime import date, datetime
 import bcrypt
 from itsdangerous import SignatureExpired, BadTimeSignature
+import random
 
 
 @app.route("/", methods=["GET", "POST"])    
@@ -15,29 +16,15 @@ def home():
     check_for_not_active_events()
     all_events = Event.query.filter_by(is_active=True).all()
     sign_up_form = EventSignUpForm()
+    filter_form = FilterEventsForm()
     if request.method == "POST":
         if check_authenticated_email():
             pass
         if request.form.get("signupforeventbtn"):
             event_obj = Event.query.filter_by(id=int(request.form.get("signupforeventbtn"))).first()
-            dob_worked = check_age(current_user.date_of_birth, event_obj)
-            max_not_reached = check_max_participants_reached(event_obj)
-            if dob_worked and max_not_reached:
-                list(event_obj.registrees).append(current_user)
-                # if current_user.event_registered_for == None:
-                #     current_user.event_registered_for = str(list(event_obj.id))
-                # else:
-                #     current_user.event_registered_for = str(list(current_user.event_registered_for).append(str(event_obj.id)))
-                db.session.commit()
-                flash(f"You have been successfully signed up for {event_obj.event_name}!", "success")
-                return redirect(url_for("home"))
-            else:
-                if dob_worked == False:
-                    flash(f"You do not meet the age requirment for this event. You must be between {event_obj.event_min_age} to {event_obj.event_max_age}.", "warning")
-                    return redirect(url_for("home"))
-                else:
-                    flash(f"Sorry, the maximum capacity for this event has been reached.", "warning")
-                    return redirect(url_for("home"))
+            
+            
+
         if request.form.get("removefromeventbtn"):
             event_obj = Event.query.filter_by(id=int(request.form.get("removefromeventbtn"))).first()
             list(event_obj.registrees).remove(current_user)
@@ -45,7 +32,7 @@ def home():
             flash(f"You have been successfully removed from {event_obj.event_name}!", "success")
             return redirect(url_for("home"))
 
-    return render_template("home.html", all_events=all_events, sign_up_form=sign_up_form, Organization=Organization, len=len, int=int)
+    return render_template("home.html", all_events=all_events, sign_up_form=sign_up_form, filter_form=filter_form, Organization=Organization, len=len, int=int)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -92,7 +79,7 @@ def register():
         password_check = check_password(user_password, user_confirm_password)
 
         if email_check_list[0] == False:
-            flash("There was an issue with your email. Please try again.", "warning")
+            flash(f"{email_check_list[2]}", "warning")
             return redirect(url_for("register"))
         elif password_check == False:
             flash("Your passwords do not match. Please try again.", "warning")
@@ -104,7 +91,6 @@ def register():
             new_user = Client(is_organization=user_is_organization, is_confirmed=False, full_name=user_fullname, date_of_birth=user_dob, email=user_email, password=encrypt_password(user_password))
             db.session.add(new_user)
             db.session.commit()
-
             token = str(Serializer.dumps(user_email, salt="email-confirmation"))
             send_authentication_email(user_email, token)
 
@@ -124,8 +110,12 @@ def confirm_email(token):
     user_obj.is_confirmed = True
     db.session.commit()
     login_user(user_obj)
-    flash(f"Welcome, {current_user.email}. You have been successfully logged in!", "success")
-    return redirect(url_for("home"))
+    if current_user.is_organization == True:
+        flash(f"Welcome, {current_user.email}. Finish creating your organization by providing the following information below.", "info")
+        return redirect(url_for("orginfo", user_id=current_user.id))
+    else:
+        flash(f"Welcome, {current_user.email}. You have been successfully logged in!", "success")
+        return redirect(url_for("home"))
 
 @app.route("/orginfo/<user_id>/", methods=["GET", "POST"])
 @login_required
@@ -146,7 +136,7 @@ def orginfo(user_id):
 
                     if form.org_image.data:
                         picture_file = save_picture(form.org_image.data)
-                        picture_file = f"{app.root_path[51:]}\static\images\{picture_file}"
+                        picture_file = str(url_for('static', filename='images/'+picture_file))
                     else:
                         flash("Please provide a valid image that represents your organization (image of organization headquarters, organization logo, etc.).", "warning")
                         return redirect(url_for("orginfo", user_id=current_user.id))
@@ -191,7 +181,8 @@ def orginfo(user_id):
                 if form.org_image.data == None:
                     organization_obj.image = organization_obj.image
                 else:
-                    organization_obj.image = f"{app.root_path[51:]}\static\images\{save_picture(form.org_image.data)}"
+                    picture_file = save_picture(form.org_image.data)
+                    organization_obj.image = str(url_for('static', filename='images/'+picture_file))
 
                 db.session.commit()
                 flash("Your organization information has been successfully updated.", "success")
@@ -210,7 +201,7 @@ def send_confirmation_email():
         token = str(Serializer.dumps(current_user.email, salt="email-confirmation"))
         send_authentication_email(current_user.email, token)
         flash("Your account has not been activated yet. An email has just been sent to you to activate your account.", "primary")
-        return redirect(url_for("account"))
+        return redirect(url_for("home"))
     else:
         flash("Your email has already been confirmed.", "primary")
         return redirect(url_for("home"))
@@ -327,7 +318,7 @@ def post():
             pass
         if form.event_img.data:
             picture_file = save_picture(form.event_img.data)
-            picture_file = f"{app.root_path[51:]}\static\images\{picture_file}"
+            picture_file = str(url_for('static', filename='images/'+picture_file))
         else:
             flash("Please provide a valid image that represents your event (image of venue, organization logo, etc.).", "warning")
             return redirect(url_for("post", user_id=current_user.id))
@@ -335,18 +326,28 @@ def post():
         current_post_time = datetime.now().strftime("%I:%M:%S %p")
         current_post_date = date.today().strftime("%b %d, %Y")
 
-        print(form.event_img.data)
-        print(picture_file)
+        li_of_kws = string_to_list(form.keywords.data)
 
         if (request.form.get("post_startdate") == "" or request.form.get("post_startdate") == None) or (request.form.get("post_enddate") == "" or request.form.get("post_enddate") == None) or (request.form.get("post_starttime") == "" or request.form.get("post_starttime") == None) or (request.form.get("post_endtime") == "" or request.form.get("post_endtime") == None):
             flash("Please enter a valid start/end date/time. Try again.", "warning")
             return redirect(url_for("post"))
-        elif len(string_to_list(form.keywords.data)) > 6 or len(string_to_list(form.keywords.data)) < 1:
-            flash(f"You may enter a max of only 6 keywords. You gave {len(string_to_list(form.keywords.data))}.", "warning")
+        elif len(li_of_kws) > 6 or len(li_of_kws) < 1:
+            flash(f"You may enter a max of only 6 keywords. You gave {len(li_of_kws)}.", "warning")
             return redirect(url_for("post"))
         else:
-            new_event = Event(event_name=form.name.data, event_startdate=request.form.get("post_startdate"), event_enddate=request.form.get("post_enddate"), event_starttime=request.form.get("post_starttime"), event_endtime=request.form.get("post_endtime"), event_location=form.location.data, event_max_volunteers=form.max_volunteers.data, event_min_age=form.age_min.data, event_max_age=form.age_max.data, event_category=form.category.data, event_description=form.description.data, event_keywords=str(get_keywords_dict(string_to_list(form.keywords.data))), event_img=picture_file, post_date=current_post_date, post_time=current_post_time, organization_id=current_user.organization_id)
+            new_event = Event(event_name=form.name.data, event_startdate=request.form.get("post_startdate"), event_enddate=request.form.get("post_enddate"), event_starttime=request.form.get("post_starttime"), event_endtime=request.form.get("post_endtime"), event_location=form.location.data, event_max_volunteers=form.max_volunteers.data, event_min_age=form.age_min.data, event_max_age=form.age_max.data, event_category=form.category.data, event_description=form.description.data, event_keywords=form.keywords.data, event_img=picture_file, post_date=current_post_date, post_time=current_post_time, organization_id=current_user.organization_id)
             db.session.add(new_event)
+            db.session.commit()
+            for keyword in li_of_kws:
+                rand_color = random.choice(get_badge_colors())
+                new_kw = None
+                output = color_exists(rand_color, new_event.id)
+                if output == False:
+                    new_kw = Keyword(phrase=str(keyword), color=rand_color, event_id=new_event.id)
+                else:
+                    new_kw = Keyword(phrase=str(keyword), color=output, event_id=new_event.id)
+                db.session.add(new_kw)
+                list(new_event.keywords).append(new_kw)
             db.session.commit()
             flash("Event has been successfully posted.", "success")
             return redirect(url_for("view_posts"))
@@ -378,14 +379,14 @@ def view_posts():
         if request.form.get("edit_post_btn"):
             edit_post_id = request.form.get("edit_post_btn")
             return redirect(url_for("edit_post", edit_post_id=edit_post_id))
-        if request.form.get("delete_post_btn"):
+        elif request.form.get("delete_post_btn"):
             delete_post_id = request.form.get("delete_post_btn")
             return redirect(url_for("delete_post", delete_post_id=delete_post_id))
-        if request.form.get("delete_from_history"):
+        elif request.form.get("delete_from_history"):
             delete_post_id = request.form.get("delete_from_history")
             return redirect(url_for("delete_post", delete_post_id=delete_post_id))
 
-    return render_template("view_posts.html", active_events=active_events, inactive_events=inactive_events, editbtnform=editbtnform, deletebtnform=deletebtnform, list=list, dict=dict)
+    return render_template("view_posts.html", active_events=active_events, inactive_events=inactive_events, editbtnform=editbtnform, deletebtnform=deletebtnform, list=list, dict=dict, type=type)
 
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
@@ -453,16 +454,36 @@ def edit_post(edit_post_id):
         post_obj.event_max_age = form.age_max.data
         post_obj.event_category = form.category.data
         post_obj.event_description = form.description.data
-        if len(string_to_list(form.keywords.data)) > 6 or len(string_to_list(form.keywords.data)) < 1:
-            flash(f"You may enter a max of only 6 keywords. You gave {len(string_to_list(form.keywords.data))}.", "warning")
-            return redirect(url_for("post"))
-        else:
-            post_obj.event_keywords = str(get_keywords_dict(string_to_list(form.keywords.data)))
+        
+        if post_obj.event_keywords != form.keywords.data:
+            if len(string_to_list(form.keywords.data)) > 6 or len(string_to_list(form.keywords.data)) < 1:
+                flash(f"You may enter a max of only 6 keywords. You gave {len(string_to_list(form.keywords.data))}.", "warning")
+                return redirect(url_for("post"))
+            else:
+                new_li_of_kws = string_to_list(form.keywords.data)
+                old_kws = list(post_obj.keywords)
+                for kw in old_kws:
+                    db.session.delete(kw)
+                db.session.commit()
+                for keyword in new_li_of_kws:
+                    rand_color = random.choice(get_badge_colors())
+                    new_kw = Keyword(phrase=keyword.capitalize(), color="", event_id=post_obj.id)
+                    output = color_exists(rand_color, post_obj.id)
+                    if output == False:
+                        new_kw.color = rand_color
+                    else:
+                        new_kw.color = output
+                    db.session.add(new_kw)
+                    list(post_obj.keywords).append(new_kw)
+            
+        post_obj.event_keywords = form.keywords.data
+        db.session.commit()
 
         if form.event_img.data == None:
             post_obj.event_img = post_obj.event_img
         else:
-            post_obj.event_img = f"{app.root_path[51:]}\static\images\{save_picture(form.event_img.data)}"
+            picture_file = save_picture(form.event_img.data)
+            post_obj.event_img = str(url_for('static', filename='images/'+picture_file))
 
         post_obj.last_updated = str(datetime.now().date().strftime("%b %d, %Y")) + " at " + str(datetime.now().time().strftime("%I:%M:%S %p"))
 

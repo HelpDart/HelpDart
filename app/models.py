@@ -73,7 +73,18 @@ class Event(db.Model, UserMixin):
     last_updated = db.Column(db.String(120))
     
     registrees = db.relationship("Client", backref="registrees")
+    keywords = db.relationship("Keyword", backref="keywords")
     organization_id = db.Column(db.Integer, db.ForeignKey('organization.id'))
 
     def __repr__(self):
         return f"\n\n{self.event_name}: Organization ID: {self.organization_id}\n\n"
+
+class Keyword(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    phrase = db.Column(db.String(120))
+    color = db.Column(db.String(60))
+
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
+
+    def __repr__(self):
+        return f"{self.phrase} --> {Event.query.filter_by(id=self.event_id).first().event_name}"

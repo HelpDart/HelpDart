@@ -1,5 +1,5 @@
 from app import app, db, mail, Serializer
-from app.models import Organization, Client, Event
+from app.models import Organization, Client, Event, Keyword
 from flask_login import current_user
 from flask import flash, redirect, url_for
 from datetime import date, datetime
@@ -10,11 +10,24 @@ from email_validator import validate_email, EmailNotValidError
 import bcrypt
 import os
 from flask_mail import Message
+import random
 
 
 def get_badge_colors():
-    badge_colors = ["bg-primary", "bg-secondary", "bg-success", "bg-warning", "bg-info", "bg-danger"]
+    badge_colors = ["primary", "secondary", "success", "warning", "info", "danger"]
     return badge_colors
+
+def color_exists(color, event_id):
+    kws = Keyword.query.filter_by(event_id=event_id).all()
+    if kws == []:
+        return False
+    else:
+        for kw in kws:
+            if kw.color == color:
+                another_color = random.choice(get_badge_colors())
+                return another_color
+            else:
+                return False
 
 def check_organization_status():
     if current_user.is_organization == True:
@@ -70,17 +83,6 @@ def save_picture(form_picture):
     i.thumbnail(output_size)
     i.save(picture_path)
     return picture_fn
-
-def get_keywords_dict(list_of_keywords):
-    kws_dict = {}
-    item_num = 0
-
-    for i in list_of_keywords:
-        badge_colors = list(get_badge_colors())
-        kws_dict[str(i)] = badge_colors[item_num]
-        item_num += 1
-
-    return kws_dict
 
 def check_email(email, check_deliv):
     boolean_email_msg_return = []
@@ -144,7 +146,7 @@ def send_authentication_email(user_email, token):
     msg = Message('Account Activation', sender=app.config['MAIL_USERNAME'], recipients=[user_email])
     msg.body = f'''
 
-    Thank you for signing up! To activate your account, please follow the link bellow:
+    Thank you for signing up! To activate your account, please follow the link below:
 
     {url_for("confirm_email", token=token, _external=True)}
     
@@ -215,10 +217,13 @@ def check_for_not_active_events():
 
 def string_to_list(string_of_words):
     list_of_words = []
+    output = []
 
-    list_of_words = list(str(string_of_words).strip("").split(","))
+    list_of_words = str(string_of_words).split(",")
+    for i in list_of_words:
+        output.append(str(i.strip()).capitalize())
 
-    return list_of_words
+    return output
 
 def convertto24(time_input): 
     if time_input[-2:] == "AM" and time_input[:2] == "12": 

@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, EmailField, PasswordField, SubmitField, TextAreaField, SelectField
+from wtforms import StringField, EmailField, PasswordField, SubmitField, TextAreaField, SelectField, DateField
 from flask_wtf.file import FileField, FileAllowed
 from wtforms.validators import InputRequired, ValidationError, EqualTo
 
@@ -96,3 +96,9 @@ class OrganizationInforForm(FlaskForm):
 
     submit = SubmitField("Save")
     
+class FilterEventsForm(FlaskForm):
+    by_open_search = StringField("By Open Search:")
+    by_category = SelectField("By Category:", choices=list(["Pick a category..."] + event_categories))
+    by_date = DateField("By Date:")
+
+    save = SubmitField("Save")
