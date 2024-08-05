@@ -1,7 +1,7 @@
 from app import app, db, Serializer
 from app.models import Client, Organization, Event, Keyword
 from app.forms import LoginForm, RegisterForm, UpdateAccountForm, JoinExistingOrganizationForm, CreateNewPostForm, EditPostBtn, DeletePostBtn, EditPostForm, EventSignUpForm, OrganizationInforForm, FilterEventsForm
-from app.funcs import check_organization_status, check_age, check_max_participants_reached, get_random_code, save_picture, check_email, check_password, get_is_organization_value, get_all_organization_objs, encrypt_password, get_all_emails, check_for_not_active_events, string_to_list, send_authentication_email, check_authenticated_email, get_badge_colors, color_exists
+from app.funcs import check_organization_status, check_age, check_max_participants_reached, get_random_code, save_picture, check_email, check_password, get_is_organization_value, get_all_organization_objs, encrypt_password, get_all_emails, check_for_not_active_events, string_to_list, send_authentication_email, check_authenticated_email, get_random_colors
 from flask import render_template, flash, request, redirect, url_for
 from flask_login import login_user, login_required, logout_user, current_user
 from datetime import date, datetime
@@ -338,14 +338,9 @@ def post():
             new_event = Event(event_name=form.name.data, event_startdate=request.form.get("post_startdate"), event_enddate=request.form.get("post_enddate"), event_starttime=request.form.get("post_starttime"), event_endtime=request.form.get("post_endtime"), event_location=form.location.data, event_max_volunteers=form.max_volunteers.data, event_min_age=form.age_min.data, event_max_age=form.age_max.data, event_category=form.category.data, event_description=form.description.data, event_keywords=form.keywords.data, event_img=picture_file, post_date=current_post_date, post_time=current_post_time, organization_id=current_user.organization_id)
             db.session.add(new_event)
             db.session.commit()
-            for keyword in li_of_kws:
-                rand_color = random.choice(get_badge_colors())
-                new_kw = None
-                output = color_exists(rand_color, new_event.id)
-                if output == False:
-                    new_kw = Keyword(phrase=str(keyword), color=rand_color, event_id=new_event.id)
-                else:
-                    new_kw = Keyword(phrase=str(keyword), color=output, event_id=new_event.id)
+            rand_colors = get_random_colors(len(li_of_kws))
+            for i in rand_colors:
+                new_kw = Keyword(phrase=str(li_of_kws[rand_colors.index(i)]), color=str(i), event_id=new_event.id)
                 db.session.add(new_kw)
                 list(new_event.keywords).append(new_kw)
             db.session.commit()
@@ -465,16 +460,14 @@ def edit_post(edit_post_id):
                 for kw in old_kws:
                     db.session.delete(kw)
                 db.session.commit()
-                for keyword in new_li_of_kws:
-                    rand_color = random.choice(get_badge_colors())
-                    new_kw = Keyword(phrase=keyword.capitalize(), color="", event_id=post_obj.id)
-                    output = color_exists(rand_color, post_obj.id)
-                    if output == False:
-                        new_kw.color = rand_color
-                    else:
-                        new_kw.color = output
+
+                rand_colors = get_random_colors(len(new_li_of_kws))
+                for i in rand_colors:
+                    new_kw = Keyword(phrase=str(new_li_of_kws[rand_colors.index(i)]), color=str(i), event_id=post_obj.id)
                     db.session.add(new_kw)
                     list(post_obj.keywords).append(new_kw)
+
+                db.session.commit()
             
         post_obj.event_keywords = form.keywords.data
         db.session.commit()

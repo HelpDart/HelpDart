@@ -17,17 +17,11 @@ def get_badge_colors():
     badge_colors = ["primary", "secondary", "success", "warning", "info", "danger"]
     return badge_colors
 
-def color_exists(color, event_id):
-    kws = Keyword.query.filter_by(event_id=event_id).all()
-    if kws == []:
-        return False
-    else:
-        for kw in kws:
-            if kw.color == color:
-                another_color = random.choice(get_badge_colors())
-                return another_color
-            else:
-                return False
+def get_random_colors(num_of_kws):
+    output = []
+    all_colors = get_badge_colors()
+    output = random.sample(all_colors, int(num_of_kws))
+    return output
 
 def check_organization_status():
     if current_user.is_organization == True:

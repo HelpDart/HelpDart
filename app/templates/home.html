@@ -108,7 +108,7 @@
             </div>
         </div>
         {% if all_events == [] %}
-            <div class="text-center" style="padding-top: 20px;">    
+            <div class="container text-center border-bottom" style="padding-top: 20px;">    
                 <p>There are no events to currently display at this time. Please try again later.</p>
             </div>
         {% else %}
@@ -181,13 +181,12 @@
             <div><hr></div>
             <div class="row justify-content-center" style="padding-left: 75px; padding-right: 75px; padding-top: 30px;">
                 {% for event in all_events %}
-                    
                     <div class="col-md-6 text-center" style="padding: 20px;">
                         <div class="card">
                             <div class="card-header">
                                 <span class=text-center>
                                     {% for kw_obj in event.keywords %}
-                                        <span class="badge badge-{{ kw_obj.color }}">{{ kw_obj.phrase }}</span>
+                                        <span class="h5"><span class="badge badge-{{ kw_obj.color }}">{{ kw_obj.phrase }}</span></span>
                                     {% endfor %}
                                 </span>
                             </div>
@@ -228,7 +227,7 @@
                                         <div class="row">
                                             <div class="col-md-3"></div>
                                             <div class="col-md-6">
-                                                <a class="btn btn-primary" href="{{ url_for('dashboard') }}">View on Dashboard</a>
+                                                <a class="btn btn-primary" href="{{ url_for('dashboard') }}#{{ event.event_name }}">View on Dashboard</a>
                                             </div>
                                             <div class="col-md-3"></div>
                                         </div>
