@@ -4,11 +4,16 @@
     <div class="collapse navbar-collapse" id="navbarText">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item active" style="padding-right: 20px;">
-                <div style="border-bottom: solid; border-bottom-color: coral;"><a class="nav-link" href="{{ url_for('home') }}" style="color: coral;">Home<span class="sr-only">(current)</span></a></div>
+                <div style="border-bottom: solid; border-bottom-color: coral; color: coral;"><a class="nav-link" href="{{ url_for('home') }}" style="color: coral;">Home<span class="sr-only">(current)</span></a></div>
             </li>
             <li class="nav-item" style="padding-right: 20px;">
-                <a class="nav-link" href="{{ url_for('organizations') }}" style="color: coral;">Organizations</a>
+                    <a class="nav-link" href="{{ url_for('organizations') }}" style="color: coral;">Organizations</a>
             </li>
+            {% if current_user.is_organization == False %}
+                <li class="nav-item" style="padding-right: 20px;">
+                    <a class="nav-link" href="{{ url_for('my_events') }}" style="color: coral;">My Events</a>
+                </li>
+            {% endif %}
         </ul>
         <ul class="navbar-nav ml-auto">
             {% if current_user.is_authenticated %}
@@ -61,10 +66,10 @@
                             </div>
                         {% endif %}
                         <div class="row">
-                            <div class="col-md-4 text-left">
+                            <div class="col-md-8 text-left">
                                 <span class="display-4">Hello, {{ current_user.full_name }}</span>
                             </div>
-                            <div class="col-md-8 text-right">
+                            <div class="col-md-4 text-right">
                                 <span style="padding-left: 55px;" class="text-primary h5">Administrator account</span>
                             </div>
                         </div>
@@ -82,10 +87,10 @@
                             </div>
                         {% endif %}
                         <div class="row">
-                            <div class="col-md-4 text-left">
+                            <div class="col-md-8 text-left">
                                 <span class="display-4">Hello, {{ current_user.full_name }}</span>
                             </div>
-                            <div class="col-md-8 text-right">
+                            <div class="col-md-4 text-right">
                                 <span style="padding-left: 55px;" class="text-primary h5">Personal account</span>
                             </div>
                         </div>
@@ -93,7 +98,7 @@
                         <p style="padding-bottom: 8px;">Jump right in by clicking a button below.</p>
                         <p class="lead">
                             <span style="padding-right: 10px;"><a class="btn btn-success btn-md" href="{{ url_for('account') }}" role="button">View My Profile</a></span>
-                            <span style="padding-right: 10px;"><a class="btn btn-primary btn-md" href="{{ url_for('home') }}#all_events" role="button">View Events</a></span>
+                            <span style="padding-right: 10px;"><a class="btn btn-primary btn-md" href="{{ url_for('my_events') }}" role="button">View My Events</a></span>
                         </p>
                     {% endif %}
                 {% else %}
@@ -108,7 +113,7 @@
             </div>
         </div>
         {% if all_events == [] %}
-            <div class="container text-center border-bottom" style="padding-top: 20px;">    
+            <div class="container text-center border-bottom" style="padding-top: 20px;">
                 <p>There are no events to currently display at this time. Please try again later.</p>
             </div>
         {% else %}
@@ -186,7 +191,7 @@
                             <div class="card-header">
                                 <span class=text-center>
                                     {% for kw_obj in event.keywords %}
-                                        <span class="h5"><span class="badge badge-{{ kw_obj.color }}">{{ kw_obj.phrase }}</span></span>
+                                        <span class="badge badge-{{ kw_obj.color }}">{{ kw_obj.phrase }}</span>
                                     {% endfor %}
                                 </span>
                             </div>
@@ -202,8 +207,24 @@
                                 <p class="card-text">
                                     {{ event.event_category }} | {{ event.event_min_age }} to {{ event.event_max_age }} yrs old
                                 </p>
-                                <p class="card-text" style="padding: 10px;"><b style="padding-right: 10px;">{{ event.for_display_event_datetime }}</b><br><span class="text-success">{{ event.days_until_event }} days until event</span></p>
+                                <p class="card-text border p-3" style="padding: 10px;">
+                                    <b style="padding-right: 10px;">{{ event.for_display_event_datetime }}</b>
+                                    <br>
+                                    <span class="text-info h6">
+                                        {% if current_user in event.registrees %}
+                                            <span class="text-muted">{{ int(event.event_max_volunteers) - len(event.registrees) }} spots left</span>
+                                        {% else %}
+                                            {% if int(event.days_until_event) >= 7 %}
+                                                <span class="text-success">{{ event.days_until_event }} days until event</span>
+                                            {% elif int(event.days_until_event) >= 3 %}
+                                                <span class="text-warning">{{ event.days_until_event }} days until event</span>
+                                            {% else %}
+                                                <span class="text-danger">{{ event.days_until_event }} days until event</span>
+                                            {% endif %}
+                                        {% endif %}
+                                </p>
                             </div>
+
                             {% if current_user.is_authenticated %}
                                 <div class="card-footer">
                                     {% if current_user.is_organization == False %}
@@ -211,7 +232,7 @@
                                             <div style="padding-right: 20px; padding-left: 10px;">
                                                 <form method="POST" action="" enctype="multipart/form-data">
                                                     <input id="removefromeventbtn" name="removefromeventbtn" type="hidden" value="{{ event.id }}">
-                                                    <button class="btn btn-danger">Remove Myself</button>
+                                                    <button class="btn btn-danger">Withdraw</button>
                                                 </form>
                                             </div>
                                         {% else %}
@@ -222,8 +243,7 @@
                                                 </form>
                                             </div>
                                         {% endif %}
-                                            
-                                    {% elif event.organization_id == current_user.organization_id %}
+                                    {% else %}
                                         <div class="row">
                                             <div class="col-md-3"></div>
                                             <div class="col-md-6">
@@ -235,27 +255,18 @@
                                 </div>
                                 <div class="card-footer">
                                     {% if current_user in event.registrees %}
-                                        <span class="text-success">You have already signed up for this event.</span>
+                                        <span class="text-muted">{{ int(event.event_max_volunteers) - len(event.registrees) }} spots left</span>
                                     {% else %}
                                         {% if int(event.event_max_volunteers) - len(event.registrees) >= (int(event.event_max_volunteers))/2 %}
                                             <span class="text-success">{{ int(event.event_max_volunteers) - len(event.registrees) }} open spots</span>
-                                        {% elif int(event.event_max_volunteers) - len(event.registrees) <= (int(event.event_max_volunteers)) * 0.82 %}
+                                        {% elif int(event.event_max_volunteers) - len(event.registrees) <= (int(event.event_max_volunteers)) * 0.75 %}
                                             <span class="text-danger">{{ int(event.event_max_volunteers) - len(event.registrees) }} open spots</span>
                                         {% else %}
                                             <span class="text-warning">{{ int(event.event_max_volunteers) - len(event.registrees) }} open spots</span>
                                         {% endif %}
                                     {% endif %}
-                                </div>
+                                </div> 
                             {% else %}
-                                <div class="card-footer">
-                                    {% if int(event.event_max_volunteers) - len(event.registrees) >= (int(event.event_max_volunteers))/2 %}
-                                        <span class="text-success">{{ int(event.event_max_volunteers) - len(event.registrees) }} open spots</span>
-                                    {% elif int(event.event_max_volunteers) - len(event.registrees) <= (int(event.event_max_volunteers)) * 0.82 %}
-                                        <span class="text-danger">{{ int(event.event_max_volunteers) - len(event.registrees) }} open spots</span>
-                                    {% else %}
-                                        <span class="text-warning">{{ int(event.event_max_volunteers) - len(event.registrees) }} open spots</span>
-                                    {% endif %}
-                                </div>
                                 <div class="card-footer">
                                     <span class="text-muted">You must be logged in to sign up for events.</span>
                                 </div>

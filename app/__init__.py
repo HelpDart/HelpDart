@@ -9,6 +9,8 @@ from itsdangerous import URLSafeTimedSerializer
 
 db = SQLAlchemy()
 
+UPLOAD_FOLDER = "static/images/"
+
 def create_app():
     app = Flask(__name__)
     
@@ -25,7 +27,9 @@ def create_app():
     
     app.config['MAIL_USE_TLS'] = True
     app.config['MAIL_USE_SSL'] = False
-    
+
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
     db.init_app(app)
 
     return app

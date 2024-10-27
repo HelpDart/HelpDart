@@ -62,6 +62,42 @@ def check_max_participants_reached(event_obj):
     else:
         return False
 
+def get_user_upcoming_events():
+    output = []
+    all_events = Event.query.filter_by(is_active=True).all()
+    for e in all_events:
+        if current_user in e.registrees:
+            output.append(e)
+
+    return output
+
+def get_user_completed_events():
+    output = []
+    all_events = Event.query.filter_by(is_active=False).all()
+    for e in all_events:
+        if current_user in e.registrees:
+            output.append(e)
+
+    return output
+
+def check_too_many_events():
+    user_events = get_user_upcoming_events()
+    if user_events == []:
+        user_events = 0
+    else:
+        user_events = len(user_events)
+
+    if user_events >= 3:
+        return False
+    else:
+        return True
+
+def check_signup_status(event_obj):
+    if current_user in event_obj.registrees:
+        return False
+    else:
+        return True
+
 def get_random_code(n=6):
     range_start = 10**(n-1)
     range_end = (10**n)-1
@@ -72,7 +108,7 @@ def save_picture(form_picture):
     _, f_ext = os.path.splitext(form_picture.filename)
     picture_fn = random_hex + str(f_ext)
     picture_path = os.path.join(app.root_path, 'static\images', picture_fn)
-    output_size = (500, 500)
+    output_size = (150,150)
     i = Image.open(form_picture)
     i.thumbnail(output_size)
     i.save(picture_path)
@@ -112,6 +148,14 @@ def email_unique(email):
     all_emails = get_all_emails()
     
     if email in all_emails:
+        return False
+    
+    return True
+
+def unique_phonenumber(phone_number):
+    all_phonenumbers = get_all_emails()
+    
+    if pn in all_phonenumbers:
         return False
     
     return True
@@ -162,52 +206,57 @@ def get_all_emails():
         all_emails_list.append(user_obj.email)
     return all_emails_list
 
+def get_all_phonenumbers():
+    all_phonenumbers_list = []
+    for user_obj in Client.query.all():
+        all_phonenumbers_list.append(user_obj.phonenumber)
+    return all_phonenumbers_list
+
 def check_for_not_active_events():
-    if current_user.is_authenticated:
-        all_events = Event.query.all()
-        for event in all_events:
+    all_events = Event.query.all()
+    for event in all_events:
+        is_active = True
+
+        current_time = convertto24(datetime.now().strftime("%I:%M:%S %p"))
+        event_time = event.event_starttime
+
+        current_date = str(date.today())
+        event_date = str(date(int(event.event_startdate[0:4]), int(str(event.event_startdate)[5:7]), int(event.event_startdate[8:])))
+        event_enddate = str(date(int(event.event_enddate[0:4]), int(str(event.event_enddate)[5:7]), int(event.event_enddate[8:])))
+
+        current_datetime = str(datetime(int(current_date[0:4]), int(current_date[5:7]), int(current_date[8:]), int(current_time[0:2]), int(current_time[3:5])))
+        event_datetime = str(datetime(int(event_date[0:4]), int(event_date[5:7]), int(event_date[8:]), int(event_time[0:2]), int(event_time[3:5])))
+
+        event_enddate_datetime = str(datetime(int(event_enddate[0:4]), int(event_enddate[5:7]), int(event_enddate[8:]), int(event.event_endtime[0:2]), int(event.event_endtime[3:5])))
+
+        if (current_datetime > event_datetime) and (current_datetime > event_enddate_datetime):
+            is_active = False
+        else:
             is_active = True
-
-            current_time = convertto24(datetime.now().strftime("%I:%M:%S %p"))
-            event_time = event.event_starttime
-
-            current_date = str(date.today())
-            event_date = str(date(int(event.event_startdate[0:4]), int(str(event.event_startdate)[5:7]), int(event.event_startdate[8:])))
-            event_enddate = str(date(int(event.event_enddate[0:4]), int(str(event.event_enddate)[5:7]), int(event.event_enddate[8:])))
-
-            current_datetime = str(datetime(int(current_date[0:4]), int(current_date[5:7]), int(current_date[8:]), int(current_time[0:2]), int(current_time[3:5])))
-            event_datetime = str(datetime(int(event_date[0:4]), int(event_date[5:7]), int(event_date[8:]), int(event_time[0:2]), int(event_time[3:5])))
-
-            event_enddate_datetime = str(datetime(int(event_enddate[0:4]), int(event_enddate[5:7]), int(event_enddate[8:]), int(event.event_endtime[0:2]), int(event.event_endtime[3:5])))
-
-            if (current_datetime > event_datetime) and (current_datetime > event_enddate_datetime):
-                is_active = False
-            else:
-                is_active = True
-                
-            if str(event.event_startdate) == str(event.event_enddate):
-                display_datetime = datetime(int(event_date[0:4]), int(event_date[5:7]), int(event_date[8:])).strftime("%b %d")
-            else:
-                display_datetime = datetime(int(event_date[0:4]), int(event_date[5:7]), int(event_date[8:])).strftime("%b %d")
-                display_datetime += " to " + str(datetime(int(event_enddate[0:4]), int(event_enddate[5:7]), int(event_enddate[8:])).strftime("%b %d"))
-
-            display_datetime += ", " + str(datetime.strptime(f"{int(event_time[0:2])}:{int(event_time[3:5])}", "%H:%M").strftime("%I:%M %p"))
-            display_datetime += " to " + str(datetime.strptime(f"{int(event.event_endtime[0:2])}:{int(event.event_endtime[3:5])}", "%H:%M").strftime("%I:%M %p"))
-
-            event.for_display_event_datetime = display_datetime
-
-            display_posttime = event.post_date + " at " + event.post_time
-            event.for_display_post_datetime = display_posttime
             
-            event.is_active = is_active
+        if str(event.event_startdate) == str(event.event_enddate):
+            display_datetime = datetime(int(event_date[0:4]), int(event_date[5:7]), int(event_date[8:])).strftime("%b %d")
+        else:
+            display_datetime = datetime(int(event_date[0:4]), int(event_date[5:7]), int(event_date[8:])).strftime("%b %d")
+            display_datetime += " to " + str(datetime(int(event_enddate[0:4]), int(event_enddate[5:7]), int(event_enddate[8:])).strftime("%b %d"))
 
-            delta = difference_between_dates(current_datetime, event_datetime, is_active)
-            event.days_until_event = delta
+        display_datetime += ", " + str(datetime.strptime(f"{int(event_time[0:2])}:{int(event_time[3:5])}", "%H:%M").strftime("%I:%M %p"))
+        display_datetime += " to " + str(datetime.strptime(f"{int(event.event_endtime[0:2])}:{int(event.event_endtime[3:5])}", "%H:%M").strftime("%I:%M %p"))
 
-            if event.last_updated == None or event.last_updated == "":
-                event.last_updated = display_posttime
+        event.for_display_event_datetime = display_datetime
 
-            db.session.commit()
+        display_posttime = event.post_date + " at " + event.post_time
+        event.for_display_post_datetime = display_posttime
+        
+        event.is_active = is_active
+
+        delta = difference_between_dates(current_datetime, event_datetime, is_active)
+        event.days_until_event = delta
+
+        if event.last_updated == None or event.last_updated == "":
+            event.last_updated = display_posttime
+
+        db.session.commit()
 
 def string_to_list(string_of_words):
     list_of_words = []

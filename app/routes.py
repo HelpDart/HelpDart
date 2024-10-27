@@ -1,13 +1,12 @@
 from app import app, db, Serializer
 from app.models import Client, Organization, Event, Keyword
 from app.forms import LoginForm, RegisterForm, UpdateAccountForm, JoinExistingOrganizationForm, CreateNewPostForm, EditPostBtn, DeletePostBtn, EditPostForm, EventSignUpForm, OrganizationInforForm, FilterEventsForm
-from app.funcs import check_organization_status, check_age, check_max_participants_reached, get_random_code, save_picture, check_email, check_password, get_is_organization_value, get_all_organization_objs, encrypt_password, get_all_emails, check_for_not_active_events, string_to_list, send_authentication_email, check_authenticated_email, get_random_colors
+from app.funcs import check_organization_status, check_age, check_max_participants_reached, get_random_code, save_picture, check_email, check_password, get_is_organization_value, get_all_organization_objs, encrypt_password, get_all_emails, check_for_not_active_events, string_to_list, send_authentication_email, check_authenticated_email, get_random_colors, check_too_many_events, check_signup_status, get_user_upcoming_events, get_user_completed_events
 from flask import render_template, flash, request, redirect, url_for
 from flask_login import login_user, login_required, logout_user, current_user
 from datetime import date, datetime
 import bcrypt
 from itsdangerous import SignatureExpired, BadTimeSignature
-import random
 
 
 @app.route("/", methods=["GET", "POST"])    
@@ -17,22 +16,66 @@ def home():
     all_events = Event.query.filter_by(is_active=True).all()
     sign_up_form = EventSignUpForm()
     filter_form = FilterEventsForm()
+
     if request.method == "POST":
         if check_authenticated_email():
             pass
         if request.form.get("signupforeventbtn"):
             event_obj = Event.query.filter_by(id=int(request.form.get("signupforeventbtn"))).first()
             
-            
+            age_is_valid = check_age(str(current_user.date_of_birth), event_obj)
+            open_space = check_max_participants_reached(event_obj)
+            not_max_events = check_too_many_events()
+            not_signed_up_already = check_signup_status(event_obj)
+            # 
+            # Also check to make sure account is not suspended - Maybe
+            #
+            if age_is_valid == False:
+                flash(f"You do not meet the age requirment for that event. You must be between {event_obj.event_min_age}-{event_obj.event_max_age} years old. Please try a different event.", "warning")
+                return redirect(url_for("home"))
+            elif open_space == False:
+                flash(f"The maximum number of registrees for this event has been reached. Please try a different event.", "warning")
+                return redirect(url_for("home"))
+            elif not_max_events == False:
+                flash(f"You may only be actively signed up for a max of 3 events at a time. Please try again later.", "warning")
+                return redirect(url_for("home"))
+            elif not_signed_up_already == False:
+                flash(f"You have already signed up for this event. Please try a different event.", "warning")
+                return redirect(url_for("home"))
+            else:
+                event_obj.registrees.append(current_user)
+                db.session.commit()
+
+                event_dt_obj = datetime(int((event_obj.event_startdate)[0:4]), int((event_obj.event_startdate)[5:7]), int((event_obj.event_startdate)[8:]))
+                output_edtobj = event_dt_obj.strftime(f"%A, %b %d")
+                flash(f"You have been registered for '{event_obj.event_name}' on {str(output_edtobj)}.", "success")
+                return redirect(url_for("my_events"))
 
         if request.form.get("removefromeventbtn"):
             event_obj = Event.query.filter_by(id=int(request.form.get("removefromeventbtn"))).first()
-            list(event_obj.registrees).remove(current_user)
+            event_obj.registrees.remove(current_user)
             db.session.commit()
-            flash(f"You have been successfully removed from {event_obj.event_name}!", "success")
+            flash(f"You have been successfully removed from '{event_obj.event_name}'.", "success")
             return redirect(url_for("home"))
 
     return render_template("home.html", all_events=all_events, sign_up_form=sign_up_form, filter_form=filter_form, Organization=Organization, len=len, int=int)
+
+@app.route("/my_events", methods=["GET", "POST"])
+@login_required
+def my_events():
+    check_for_not_active_events()
+    upcoming_events = get_user_upcoming_events()
+    completed_events = get_user_completed_events()
+
+    if request.method == "POST":
+        if request.form.get("removefromeventbtn"):
+            event_obj = Event.query.filter_by(id=int(request.form.get("removefromeventbtn"))).first()
+            event_obj.registrees.remove(current_user)
+            db.session.commit()
+            flash(f"You have been successfully removed from '{event_obj.event_name}'.", "success")
+            return redirect(url_for("home"))
+
+    return render_template("my_events.html", upcoming_events=upcoming_events, completed_events=completed_events, len=len, round=round, int=int)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -52,7 +95,7 @@ def login():
                         flash("Please fill out the following information about your organization.", "info")
                         return redirect(url_for("orginfo", user_id=current_user.id))
                     else:
-                        flash("You have been successfully logged in.", "success")
+                        flash("You have been successfully logged in.", "success") 
                         return redirect(url_for("home"))
                 else:
                     flash("Incorrect password, please try again.", "warning")
@@ -69,9 +112,17 @@ def register():
     if request.method == "POST":
         user_fullname = form.fullname.data
         user_email = form.email.data
+        user_phonenumber = form.phonenumber.data
         user_dob = str(datetime(int(request.form.get("dob")[0:4]), int(request.form.get("dob")[5:7]), int(request.form.get("dob")[8:])))[0:10]
         user_password = form.password.data
         user_confirm_password = form.confirm_password.data
+        
+        if form.profile_picture.data:
+            picture_file = save_picture(form.profile_picture.data)
+            picture_file = str(url_for('static', filename='images/'+picture_file))
+        else:
+            picture_file = str(url_for('static', filename='default_imgs/'+"default_user.jpg"))
+        
         user_is_organization = get_is_organization_value(request.form.get("is_organization"))
 
         email_check_list = check_email(user_email, True)
@@ -88,7 +139,7 @@ def register():
             flash("That is an invalid date of birth. Please try again.", "warning")
             return redirect(url_for("register"))
         else:
-            new_user = Client(is_organization=user_is_organization, is_confirmed=False, full_name=user_fullname, date_of_birth=user_dob, email=user_email, password=encrypt_password(user_password))
+            new_user = Client(is_organization=user_is_organization, is_confirmed=False, full_name=user_fullname, date_of_birth=user_dob, email=user_email, phonenumber=user_phonenumber, password=encrypt_password(user_password), profile_pic=picture_file)
             db.session.add(new_user)
             db.session.commit()
             token = str(Serializer.dumps(user_email, salt="email-confirmation"))
@@ -247,6 +298,7 @@ def account():
     if request.method == "GET":
         form.fullname.data = current_user.full_name
         form.email.data = current_user.email
+        form.dob.data = current_user.date_of_birth
 
     elif request.method == "POST":
         
@@ -266,6 +318,15 @@ def account():
             
             current_user.full_name = new_user_fullname
             current_user.email = new_user_email
+            current_user.date_of_birth = request.form.get("dob")
+
+            if form.profile_picture.data:
+                picture_file = save_picture(form.profile_picture.data)
+                picture_file = str(url_for('static', filename='images/'+picture_file))
+                current_user.profile_pic = picture_file
+            else:
+                current_user.profile_pic = str(url_for('static', filename='default_imgs/'+"default_user.jpg"))
+
             db.session.commit()
             flash("Your account information has been successfully updated!", "success")
             return redirect(url_for("account"))
@@ -394,6 +455,11 @@ def dashboard():
     organization_obj = Organization.query.filter_by(id=current_user.organization_id).first()
     all_events = Event.query.filter_by(organization_id=current_user.organization_id).all()
     authorized_admins = organization_obj.administrators
+
+    if request.method == "POST":
+        if request.form.get("edit_post_btn"):
+            edit_post_id = request.form.get("edit_post_btn")
+            return redirect(url_for("edit_post", edit_post_id=edit_post_id))
 
     return render_template("dashboard.html", all_events=all_events, authorized_admins=authorized_admins, len=len, organization_obj=organization_obj)
 

@@ -1,0 +1,188 @@
+{% extends "layout.html" %}
+
+{% block navbar_links %}
+    <div class="collapse navbar-collapse" id="navbarText">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item active" style="padding-right: 20px;">
+                <a class="nav-link" href="{{ url_for('home') }}" style="color: coral;">Home</a>
+            </li>
+            <li class="nav-item" style="padding-right: 20px;">
+                <a class="nav-link" href="{{ url_for('organizations') }}" style="color: coral;">Organizations</a>
+            </li>
+            {% if current_user.is_organization == False %}
+                <li class="nav-item" style="padding-right: 20px;">
+                    <a class="nav-link" href="{{ url_for('my_events') }}" style="border-bottom: solid; border-bottom-color: coral; color: coral;">My Events</a>
+                </li>
+            {% endif %}
+        </ul>
+        <ul class="navbar-nav ml-auto">
+            {% if current_user.is_authenticated %}
+                <li class="nav-item" style="padding-right: 20px;">
+                    <a class="nav-link" href="{{ url_for('account') }}" style="color: coral;">Account</a>
+                </li>
+                {% if current_user.is_organization and current_user.answered_organization_questions %}
+                    <li class="nav-item" style="padding-right: 20px;">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}" style="color: coral;">Dashboard</a>
+                    </li>
+                    <li class="nav-item dropdown" style="padding-right: 20px;">
+                        <a style="color: coral;" class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Post
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="{{ url_for('post') }}">Create New Post</a>
+                            <a class="dropdown-item" href="{{ url_for('view_posts') }}">View Your Posts</a>
+                        </div>
+                    </li>
+                {% endif %}
+                <li class="nav-item" style="padding-right: 20px;">
+                    <a class="nav-link" href="{{ url_for('logout') }}" style="color: coral;">Logout</a>
+                </li>
+            {% else %}
+                <li class="nav-item" style="padding-right: 20px;">
+                    <a class="nav-link" href="{{ url_for('register') }}" style="color: coral;">Register</a>
+                </li>
+                <li class="nav-item" style="padding-right: 20px;">
+                    <a class="nav-link" href="{{ url_for('login') }}" style="color: coral;">Login</a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+{% endblock navbar_links %}
+
+{% block main %}
+    
+    <div style="padding-bottom: 150px; padding-top: 70px;">
+        <div class="container-fluid">
+            {% if current_user.is_confirmed == False %}
+                <div class="container border border-danger mb-5 p-4 rounded text-center">
+                    <span class="h6">You have not confirmed your email yet. Some actions will be limited.<br>Click <a href="{{ url_for('send_confirmation_email') }}">here</a> to resend the instructions to authenticate your account to your email.</span>
+                </div>
+            {% endif %}
+
+                <div class="jumbotron">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-md-8 text-left">
+                                <span class="display-4">Your Events</span>
+                            </div>
+                            <!-- <div class="col-md-4 text-right">
+                                <span style="padding-left: 55px;" class="text-primary h5">Administrator account</span>
+                            </div> -->
+                        </div>
+                        <hr class="my-4">
+                        <p class="lead">
+                            <span style="padding-right: 10px;"><a class="btn btn-info btn-md" href="{{ url_for('home') }}" role="button">Go Home</a></span>
+                            <span style="padding-right: 10px;"><a class="btn btn-primary btn-md" href="{{ url_for('account') }}" role="button">View my Profile</a></span>
+                        </p>
+                    </div>
+                </div>
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-12 text-left" style="padding-top: 40px;">
+                            <span class="h2">Upcoming Events</span>
+                            <hr>
+                            <div>
+                                {% if upcoming_events == [] %}
+                                    <div class="container text-center" style="padding-top: 20px;">
+                                        <p class="p-2">You are not currently signed up for any events. Find events <a href="{{ url_for('home') }}">here</a>.</p>
+                                    </div>
+                                {% else %}
+                                    {% for event in upcoming_events %}
+                                        
+                                        <div class="row" style="padding-top: 30px;">
+                                            <div class="col-md-12">
+                                                <div class="card">
+                                                    <div class="card-header">
+                                                        <div class="row">
+                                                            {% if int(event.days_until_event) <= round(int(event.days_until_event) * 0.75) %}
+                                                                <div class="col-md-5 text-left">
+                                                                    <h5 class="text-danger">
+                                                                        <b>{{ event.days_until_event }} days until</b>
+                                                                    </h5>
+                                                                </div>
+                                                                <div class="col-md-7 text-right">
+                                                                    <h5 class="text-danger">
+                                                                        <b>{{ event.for_display_event_datetime }}</b>
+                                                                    </h5>
+                                                                </div>
+                                                            {% elif int(event.days_until_event) <= round(int(event.days_until_event) * 0.5) %}
+                                                                <div class="col-md-5 text-left">
+                                                                    <h5 class="text-warning">
+                                                                        <b>{{ event.days_until_event }} days until</b>
+                                                                    </h5>
+                                                                </div>
+                                                                <div class="col-md-7 text-right">
+                                                                    <h5 class="text-warning">
+                                                                        <b>{{ event.for_display_event_datetime }}</b>
+                                                                    </h5>
+                                                                </div>
+                                                            {% else %}
+                                                                <div class="col-md-5 text-left">
+                                                                    <h5 class="text-success">
+                                                                        <b>{{ event.days_until_event }} days until</b>
+                                                                    </h5>
+                                                                </div>
+                                                                <div class="col-md-7 text-right">
+                                                                    <h5 class="text-success">
+                                                                        <b>{{ event.for_display_event_datetime }}</b>
+                                                                    </h5>
+                                                                </div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body">
+                                                        <div class="row">
+                                                            <div class="col-md-4 text-left">
+                                                                <h4 class="card-title">{{ event.event_name }}</h4>
+                                                            </div>
+                                                            <div class="col-md-8 text-right">
+                                                                <h6>
+                                                                    {% for kw_obj in event.keywords %}
+                                                                        <span class="badge badge-{{ kw_obj.color }}">{{ kw_obj.phrase }}</span>
+                                                                    {% endfor %}
+                                                                </h6>
+                                                            </div>
+                                                        </div>
+                                                        <hr>
+                                                        <p class="card-text"><b>Location:</b> {{ event.event_location }}</p>
+                                                        <p class="card-text"><b>Category:</b> {{ event.event_category }}</p>
+                                                        <p class="card-text"><b>Description:</b> {{ event.event_description }}</p>
+                                                        <div style="padding-top: 10px;">
+                                                            <form method="POST" action="" enctype="multipart/form-data">
+                                                                <input id="removefromeventbtn" name="removefromeventbtn" type="hidden" value="{{ event.id }}">
+                                                                <button class="btn btn-danger">Withdraw</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" style="padding-top: 60px;">
+                        <div class="col-md-12 text-left" style="padding-top: 40px;">
+                            <span class="h3">Completed Events</span>
+                            <hr>
+                            <div>
+                                {% if completed_events == [] %}
+                                    <div class="container text-center" style="padding-top: 20px;">
+                                        <p class="p-2">You do not have any completed events.</p>
+                                    </div>
+                                {% else %}
+                                    {% for event in completed_events %}
+                                        {{ event }}<br>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock main %}

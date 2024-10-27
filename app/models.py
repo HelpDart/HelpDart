@@ -13,11 +13,15 @@ class Client(db.Model, UserMixin):
     full_name = db.Column(db.String(60))
     date_of_birth = db.Column(db.String(60))
     email = db.Column(db.String(120), unique=True)
+    phonenumber = db.Column(db.String(16), unique=True)
     password = db.Column(db.String(60))
+    profile_pic = db.Column(db.String(120), default="default_user.jpg")
 
     answered_organization_questions = db.Column(db.Boolean, default=False)
+    events_registered_for = db.Column(db.String, default=None)
+
     organization_id = db.Column(db.Integer, db.ForeignKey('organization.id'))
-    event_registered_for = db.Column(db.Integer, db.ForeignKey('event.id'))
+    events_id = db.Column(db.Integer, db.ForeignKey('event.id'))
     
     def __repr__(self):
         output = ""
@@ -72,9 +76,9 @@ class Event(db.Model, UserMixin):
     days_until_event = db.Column(db.String(120))
     last_updated = db.Column(db.String(120))
     
-    registrees = db.relationship("Client", backref="registrees")
     keywords = db.relationship("Keyword", backref="keywords")
     organization_id = db.Column(db.Integer, db.ForeignKey('organization.id'))
+    registrees = db.relationship("Client", backref="registree")
 
     def __repr__(self):
         return f"\n\n{self.event_name}: Organization ID: {self.organization_id}\n\n"

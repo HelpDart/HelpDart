@@ -9,6 +9,11 @@
             <li class="nav-item" style="padding-right: 20px;">
                 <a class="nav-link" href="{{ url_for('organizations') }}" style="color: coral;">Organizations</a>
             </li>
+            {% if current_user.is_organization == False and current_user.is_authenticated == True %}
+                <li class="nav-item" style="padding-right: 20px;">
+                    <a class="nav-link" href="{{ url_for('my_events') }}" style="color: coral;">My Events</a>
+                </li>
+            {% endif %}
         </ul>
         <ul class="navbar-nav ml-auto">
             {% if current_user.is_authenticated %}
@@ -32,11 +37,11 @@
 
 {% block main %}
     
-    <div class="container">
+    <div class="container" style="padding-bottom: 100px;">
         <div class="text-center">
             <h2 style="color: coral;">Register</h2>
             <hr>
-            <small>If you are registering as an organization, fill out your personal information below as an admin first. Afterwards, you will be prompted to create your organization.</small>
+            <small>If you are registering as an organization, fill out your personal information below as an administrator first. Afterwards, you will be prompted to create your organization.</small>
         </div>
         <div style="padding-top: 50px;">
             <form method="POST" action="" enctype="multipart/form-data">
@@ -74,6 +79,20 @@
 
                     </div>
                     <div class="form-group">
+                        {{ form.phonenumber.label(class="form-control-label") }}
+                        {% if form.phonenumber.errors %}
+                            {{ form.phonenumber(class="form-control form-control-lg is-invalid") }}
+                            <div class="invalid-feedback">
+                                {% for error in form.phonenumber.errors %}
+                                    <span>{{ error }}</span>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ form.phonenumber(class="form-control form-control-lg") }}
+                        {% endif %}
+
+                    </div>
+                    <div class="form-group">
                         {{ form.password.label(class="form-control-label") }}
                         {% if form.password.errors %}
                             {{ form.password(class="form-control form-control-lg is-invalid") }}
@@ -98,6 +117,17 @@
                         {% else %}
                             {{ form.confirm_password(class="form-control form-control-lg") }}
                         {% endif %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.profile_picture.label() }}
+                        {{ form.profile_picture(class="form-control-file") }}
+                        {% if form.profile_picture.errors %}
+                            {% for error in form.profile_picture.errors %}
+                                <br>   
+                                <span class="text-danger">{{ error }}</span></br>
+                            {% endfor %}
+                        {% endif %}
+                        <br>
                     </div>
                     <div class="form-group">
                         <input type="checkbox" id="is_organization" name="is_organization" value="organization">

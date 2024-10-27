@@ -4,11 +4,16 @@
     <div class="collapse navbar-collapse" id="navbarText">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item active" style="padding-right: 20px;">
-                <div><a class="nav-link" href="{{ url_for('home') }}" style="color: coral;">Home<span class="sr-only">(current)</span></a></div>
+                <a class="nav-link" href="{{ url_for('home') }}" style="color: coral;">Home</a>
             </li>
             <li class="nav-item" style="padding-right: 20px;">
                 <a class="nav-link" href="{{ url_for('organizations') }}" style="color: coral;">Organizations</a>
             </li>
+            {% if current_user.is_organization == False %}
+                <li class="nav-item" style="padding-right: 20px;">
+                    <a class="nav-link" href="{{ url_for('my_events') }}" style="color: coral;">My Events</a>
+                </li>
+            {% endif %}
         </ul>
         <ul class="navbar-nav ml-auto">
             {% if current_user.is_authenticated %}
@@ -116,34 +121,34 @@
 
                 {% for event in all_events %}
                     
-                    <div style="padding: 20px;">
-                        {% if event.is_active %}
-                            <div class="row justify-content-center border p-3 border-success border-3 rounded">
-                        {% else %}
-                            <div class="row justify-content-center border p-3 border-warning border-3 rounded">
-                        {% endif %}
+                    <div style="padding: 20px;" class="border rounded border-dark">
+                            <div class="row justify-content-center p-3">
                                 <div class="col-md-5">
                                     <img src="{{ event.event_img }}" class="card-img-top border border-dark rounded" style="width: 100%; height: 16vw; object-fit: cover;">
                                 </div>
                                 <div class="col-md-7">
-                                    <p>
-                                        <span class="h5" id="{{ event.event_name }}">{{ event.event_name }}</span>
-                                        <span style="padding-left: 20px;">
-                                            {% if event.is_active %}
-                                                <small class="text-success"><b>Active</b></small>
-                                            {% else %}
-                                                <small class="text-warning"><b>Inactive</b></small>
-                                            {% endif %}
-                                        </span>
-                                        <br>
-                                        <span>
-                                            <small>
-                                                {{ event.event_location }}
-                                            </small>
-                                        </span>
-                                        <hr>
-                                        <span><b>Event Time:</b><br>{{ event.for_display_event_datetime }}</span>
-                                    </p>
+                                    <div class="row">
+                                        <div class="col-md-9 text-left">
+                                            <span class="h5" id="{{ event.event_name }}">{{ event.event_name }}</span>
+                                            <span style="padding-left: 40px;">
+                                                {% if event.is_active %}
+                                                    <small class="text-success"><b>Active</b></small>
+                                                {% else %}
+                                                    <small class="text-warning"><b>Inactive</b></small>
+                                                {% endif %}
+                                            </span>
+                                        </div>
+                                        <div class="col-md-3 text-right">
+                                            <form method="POST" action="" enctype="multipart/form-data">
+                                                <span style="padding-right: 5px;">
+                                                    <button type="submit" class="btn btn-warning" id="edit_post_btn" name="edit_post_btn" value="{{ event.id }}">
+                                                        Edit
+                                                    </button>
+                                                </span>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <p><span><small>{{ event.event_location }}</small></span><hr><span><b>Event Time:</b><br>{{ event.for_display_event_datetime }}</span></p>
                                     <p style="padding-top: 15px;">
                                         <b>Authorized Admins:</b>
                                         <ul>
@@ -158,23 +163,24 @@
                                     </p>
                                 </div>
                             </div>
-                            {% if event.is_active %}
-                                <div class="row justify-content-center border border-top-0 p-3 border-success border-3 rounded">
-                            {% else %}
-                                <div class="row justify-content-center border border-top-0 p-3 border-warning border-3 rounded">
-                            {% endif %}
-                                <div class="col-md-12">
-                                    <span class="h5">Registrees</span><br><hr>
-                                    {% if event.registrees == [] %}
-                                        <span>There are currently no registrees for this event. Please check back later.</span>
-                                    {% else %}
-                                        <ul>
-                                            {% for r in event.registrees %}
-                                                <li>{{ r.full_name }}</li>
-                                            {% endfor %}
-                                        </ul>
-                                    {% endif %}
+                            <div class="row text-center mt-4">
+                                <div class="col-md-5 text-center"><hr></div><div class="col-md-2 h5 text-center">Registrees</div><div class="col-md-5 text-center"><hr></div>
+                            </div>
+                            <div class="text-center">
+                                {% if event.registrees == [] %}
+                                    <span>There are currently no registrees for this event. Please check back later.</span>
+                                {% else %}
+                                    
+                                <div class="row m-4">
+                                    <div class="col-md-6 p-4 border border-warning">
+                                        
+                                    </div>
+                                    <div class="col-md-6 p-4 border border-success">
+
+                                    </div>
                                 </div>
+
+                                {% endif %}
                             </div>
                         </div>
                     </div>
