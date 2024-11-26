@@ -153,7 +153,7 @@ def email_unique(email):
     return True
 
 def unique_phonenumber(pn):
-    all_phonenumbers = get_all_emails()
+    all_phonenumbers = get_all_phonenumbers()
     
     if pn in all_phonenumbers:
         return False

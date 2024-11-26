@@ -6,6 +6,7 @@ from wtforms.validators import ValidationError, EqualTo, DataRequired
 import phonenumbers
 
 event_categories = ["Animals/Veterinary", "Religious", "Medical", "Military", "Arts/Literature", "Sports", "Youth/Education", "Nature/Outdoors", "Community", "Philanthropy/General", "Other"]
+affiliated_areas = ["Chicago, Illinois", "Jacksonville, Florida"]
 
 class LoginForm(FlaskForm):
     email = EmailField("Email:", validators=[DataRequired()])
@@ -18,6 +19,7 @@ class RegisterForm(FlaskForm):
     date_of_birth = StringField("Date of Birth:", validators=[DataRequired()])
     email = EmailField("Email:", validators=[DataRequired()])
     phonenumber = StringField("Phone Number:", validators=[DataRequired()])
+    affiliated_area = SelectField("Affiliated Area:", choices=list([" "] + affiliated_areas))
     password = PasswordField("Password:", validators=[DataRequired()])
     confirm_password = PasswordField("Confirm Password:", validators=[DataRequired(), EqualTo("password")])
     profile_picture = FileField("Profile Picture (optional):", validators=[FileAllowed(['jpg', 'png'])])
@@ -36,10 +38,12 @@ class RegisterForm(FlaskForm):
 
     submit = SubmitField("Register")
 
-class UpdateAccountForm(FlaskForm): 
+class UpdateAccountForm(FlaskForm):
     fullname = StringField("Full Name:")
-    email = EmailField("Email:")
     dob = DateField("Date of Birth:")
+    email = EmailField("Email:")
+    phonenumber = StringField("Phone Number:", validators=[DataRequired()])
+    affiliated_area = SelectField("Affiliated Area:", choices=list([" "] + affiliated_areas))
     profile_picture = FileField("Profile Picture:", validators=[FileAllowed(['jpg', 'png'])])
 
     submit = SubmitField("Save")
@@ -110,7 +114,7 @@ class OrganizationInforForm(FlaskForm):
     email_contact = StringField("Email:", validators=[DataRequired()])
     phonenumber_contact = StringField("Phone Number:", validators=[DataRequired()])
     website_link = StringField("Link to Website Homepage:", validators=[DataRequired()])
-    org_image = FileField("Organization Image:", validators=[FileAllowed(['jpg', 'png']), DataRequired()])
+    org_image = FileField("Organization Image:", validators=[FileAllowed(['jpg', 'png'])])
 
     submit = SubmitField("Save")
     
@@ -119,7 +123,7 @@ class FilterEventsForm(FlaskForm):
     by_category = SelectField("By Category:", choices=list(["Pick a category..."] + event_categories))
     by_date = DateField("By Date:")
 
-    save = SubmitField("Save")
+    save = SubmitField("Search")
 
 class UserEmergencyContactForm(FlaskForm):
     emergency_contact_full_name = StringField("Emergency Contact Name:", validators=[DataRequired()])

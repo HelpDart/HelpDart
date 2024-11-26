@@ -1,7 +1,7 @@
 from app import app, db, Serializer
 from app.models import Client, Organization, Event, Keyword
 from app.forms import LoginForm, RegisterForm, UpdateAccountForm, JoinExistingOrganizationForm, CreateNewPostForm, EditPostBtn, DeletePostBtn, EditPostForm, EventSignUpForm, OrganizationInforForm, FilterEventsForm
-from app.funcs import check_organization_status, check_age, check_max_participants_reached, get_random_code, save_picture, check_email, check_password, get_is_organization_value, get_all_organization_objs, encrypt_password, get_all_emails, check_for_not_active_events, string_to_list, send_authentication_email, check_authenticated_email, get_random_colors, check_too_many_events, check_signup_status, get_user_upcoming_events, get_user_completed_events
+from app.funcs import check_organization_status, check_age, check_max_participants_reached, get_random_code, save_picture, check_email, check_password, get_is_organization_value, get_all_organization_objs, encrypt_password, get_all_emails, check_for_not_active_events, string_to_list, send_authentication_email, check_authenticated_email, get_random_colors, check_too_many_events, check_signup_status, get_user_upcoming_events, get_user_completed_events, unique_phonenumber
 from flask import render_template, flash, request, redirect, url_for
 from flask_login import login_user, login_required, logout_user, current_user
 from datetime import date, datetime
@@ -132,6 +132,12 @@ def register():
         if email_check_list[0] == False:
             flash(f"{email_check_list[2]}", "warning")
             return redirect(url_for("register"))
+        elif form.affiliated_area == " ":
+            flash("Please select a valid affiliated area.", "warning")
+            return redirect(url_for("register"))
+        elif unique_phonenumber(user_phonenumber) == False:
+            flash("That phonenumber already exists in our database. Please try again.", "warning")
+            return redirect(url_for("register"))
         elif password_check == False:
             flash("Your passwords do not match. Please try again.", "warning")
             return redirect(url_for("register"))
@@ -139,7 +145,7 @@ def register():
             flash("That is an invalid date of birth. Please try again.", "warning")
             return redirect(url_for("register"))
         else:
-            new_user = Client(is_organization=user_is_organization, is_confirmed=False, full_name=user_fullname, date_of_birth=user_dob, email=user_email, phonenumber=user_phonenumber, password=encrypt_password(user_password), profile_pic=picture_file)
+            new_user = Client(is_organization=user_is_organization, is_confirmed=False, full_name=user_fullname, date_of_birth=user_dob, email=user_email, phonenumber=user_phonenumber, affiliated_area=form.affiliated_area.data, password=encrypt_password(user_password), profile_pic=picture_file)
             db.session.add(new_user)
             db.session.commit()
             token = str(Serializer.dumps(user_email, salt="email-confirmation"))
@@ -189,8 +195,7 @@ def orginfo(user_id):
                         picture_file = save_picture(form.org_image.data)
                         picture_file = str(url_for('static', filename='images/'+picture_file))
                     else:
-                        flash("Please provide a valid image that represents your organization (image of organization headquarters, organization logo, etc.).", "warning")
-                        return redirect(url_for("orginfo", user_id=current_user.id))
+                        picture_file = str(url_for('static', filename='default_imgs/'+"default_organization.jpg"))
 
                     new_org_info_obj = Organization(organization_name=form.organization_name.data, primary_location= form.primary_location.data, mission_statement= form.mission_statement.data, email_contact= form.email_contact.data, phonenumber_contact= form.phonenumber_contact.data, website_link= form.website_link.data, image=picture_file, security_code=str(get_random_code()))
                     db.session.add(new_org_info_obj)
@@ -299,37 +304,79 @@ def account():
         form.fullname.data = current_user.full_name
         form.email.data = current_user.email
         form.dob.data = current_user.date_of_birth
+        form.phonenumber.data = current_user.phonenumber
+        form.affiliated_area.data = current_user.affiliated_area
 
     elif request.method == "POST":
-        
         if form.validate_on_submit():
-            new_user_fullname = form.fullname.data
-            new_user_email = form.email.data
-
-            if new_user_email != current_user.email:
-                email_check_list = check_email(new_user_email, True)
-                new_user_email = email_check_list[1]
-
-                if email_check_list[0] == False:
-                    flash("There was an issue with your email. Please try again.", "warning")
-                    return redirect(url_for("account"))
-            else:
-                new_user_email = form.email.data
+            user_dob = str(datetime(int(request.form.get("dob")[0:4]), int(request.form.get("dob")[5:7]), int(request.form.get("dob")[8:])))[0:10]
             
-            current_user.full_name = new_user_fullname
-            current_user.email = new_user_email
-            current_user.date_of_birth = request.form.get("dob")
+            pn_result = unique_phonenumber(form.phonenumber.data)
+            email_check_list = check_email(form.email.data, True)
 
-            if form.profile_picture.data:
+            if form.profile_picture.data == None:
+                picture_file = str(url_for('static', filename='default_imgs/'+"default_user.jpg"))
+            else:
                 picture_file = save_picture(form.profile_picture.data)
                 picture_file = str(url_for('static', filename='images/'+picture_file))
-                current_user.profile_pic = picture_file
-            else:
-                current_user.profile_pic = str(url_for('static', filename='default_imgs/'+"default_user.jpg"))
 
-            db.session.commit()
-            flash("Your account information has been successfully updated!", "success")
-            return redirect(url_for("account"))
+            if form.email.data == current_user.email:
+                email_check_list[0] = True
+
+            if form.phonenumber.data == current_user.phonenumber:
+                pn_result = True
+
+            if email_check_list[0] == False:
+                flash(f"{email_check_list[2]}", "warning")
+                return redirect(url_for("account"))
+            elif form.affiliated_area.data == " ":
+                flash("Please select a valid affiliated area.", "warning")
+                return redirect(url_for("account"))
+            elif pn_result == False:
+                flash("That phonenumber already exists in our database. Please try again.", "warning")
+                return redirect(url_for("account"))
+            elif datetime(int(user_dob[0:4]), int(user_dob[5:7]), int(user_dob[8:])) > datetime(int(str(date.today())[0:4]), int(str(date.today())[5:7]), int(str(date.today())[8:])):
+                flash("That is an invalid date of birth. Please try again.", "warning")
+                return redirect(url_for("register"))
+            else:
+                current_user.full_name = form.fullname.data
+                current_user.date_of_birth = user_dob
+                current_user.phonenumber = form.phonenumber.data
+                current_user.affiliated_area = form.affiliated_area.data
+                current_user.profile_pic = picture_file
+                db.session.commit()
+                if form.email.data != current_user.email:
+                    token = str(Serializer.dumps(form.email.data, salt="email-confirmation"))
+                    send_authentication_email(form.email.data, token)
+            
+            if form.validate_on_submit():
+                new_user_fullname = form.fullname.data
+                new_user_email = form.email.data
+
+                if new_user_email != current_user.email:
+                    email_check_list = check_email(new_user_email, True)
+                    new_user_email = email_check_list[1]
+
+                    if email_check_list[0] == False:
+                        flash("There was an issue with your email. Please try again.", "warning")
+                        return redirect(url_for("account"))
+                else:
+                    new_user_email = form.email.data
+                
+                current_user.full_name = new_user_fullname
+                current_user.email = new_user_email
+                current_user.date_of_birth = request.form.get("dob")
+
+                if form.profile_picture.data:
+                    picture_file = save_picture(form.profile_picture.data)
+                    picture_file = str(url_for('static', filename='images/'+picture_file))
+                    current_user.profile_pic = picture_file
+                else:
+                    current_user.profile_pic = str(url_for('static', filename='default_imgs/'+"default_user.jpg"))
+
+                db.session.commit()
+                flash("Your account information has been successfully updated!", "success")
+                return redirect(url_for("account"))
         
         if request.form.get("edit_organization_info"):
             if check_authenticated_email():

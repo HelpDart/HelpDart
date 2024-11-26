@@ -14,6 +14,7 @@ class Client(db.Model, UserMixin):
     date_of_birth = db.Column(db.String(60))
     email = db.Column(db.String(120), unique=True)
     phonenumber = db.Column(db.String(16), unique=True)
+    affiliated_area = db.Column(db.String(120))
     password = db.Column(db.String(60))
     profile_pic = db.Column(db.String(120), default="default_user.jpg")
 

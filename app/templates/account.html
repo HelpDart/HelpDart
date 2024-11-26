@@ -124,6 +124,10 @@
                             {% endif %}
                         </div>
                         <div class="form-group">
+                            {{ form.dob.label(class="form-control-label") }}<br>
+                            <input id="dob" name="dob" type="date" value="{{ current_user.date_of_birth }}"/>
+                        </div>
+                        <div class="form-group">
                             {{ form.email.label(class="form-control-label") }}
                             {% if form.email.errors %}
                                 {{ form.email(class="form-control form-control-lg is-invalid") }}
@@ -137,8 +141,31 @@
                             {% endif %}
                         </div>
                         <div class="form-group">
-                            {{ form.dob.label(class="form-control-label") }}<br>
-                            <input id="dob" name="dob" type="date" value="{{ current_user.date_of_birth }}"/>
+                            {{ form.phonenumber.label(class="form-control-label") }}
+                            {% if form.phonenumber.errors %}
+                                {{ form.phonenumber(class="form-control form-control-lg is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.phonenumber.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.phonenumber(class="form-control form-control-lg") }}
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            {{ form.affiliated_area.label(class="form-control-label") }}
+                            {% if form.affiliated_area.errors %}
+                                {{ form.affiliated_area(class="form-control form-control-lg is-invalid") }}
+                                <div class="invalid-feedback">
+                                    {% for error in form.affiliated_area.errors %}
+                                        <span>{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {{ form.affiliated_area(class="form-control form-control-lg") }}
+                            {% endif %}
+    
                         </div>
                         <div class="form-group">
                             {{ form.profile_picture.label() }}
@@ -169,7 +196,7 @@
                     <div class="card">
                         <div class="row">
                             <div class="col-md-4">
-                                <img src='{{ user_organization_obj.image }}' class="rounded-start" style="height: 100vh; width: 100vw; overflow: hidden; width: 100%; height: 100%; object-fit: cover;" alt="Organization image">
+                                <img src='{{ user_organization_obj.image }}' class="rounded-start" style="padding: 15px; height: 100vh; width: 100vw; object-fit: contain; width: 100%; height: 100%;" alt="Organization image">
                             </div>
                             <div class="col-md-8">
                                 <div class="card-body">
