@@ -4,6 +4,8 @@ from wtforms import StringField, EmailField, PasswordField, SubmitField, TextAre
 from flask_wtf.file import FileField, FileAllowed
 from wtforms.validators import ValidationError, EqualTo, DataRequired
 import phonenumbers
+from datetime import datetime
+from flask_login import current_user
 
 event_categories = ["Animals/Veterinary", "Religious", "Medical", "Military", "Arts/Literature", "Sports", "Youth/Education", "Nature/Outdoors", "Community", "Philanthropy/General", "Other"]
 affiliated_areas = ["Chicago, Illinois", "Jacksonville, Florida"]
@@ -121,7 +123,8 @@ class OrganizationInforForm(FlaskForm):
 class FilterEventsForm(FlaskForm):
     by_open_search = StringField("By Open Search:")
     by_category = SelectField("By Category:", choices=list(["Pick a category..."] + event_categories))
-    by_date = DateField("By Date:")
+    by_date = StringField("By Date:")
+    by_location = SelectField("By Location:", choices=list([" "] + affiliated_areas))
 
     save = SubmitField("Search")
 

@@ -1,4 +1,4 @@
-from app import app, db, Serializer
+from app import app, db, Serializer, WEBSITE_COLOR
 from app.models import Client, Organization, Event, Keyword
 from app.forms import LoginForm, RegisterForm, UpdateAccountForm, JoinExistingOrganizationForm, CreateNewPostForm, EditPostBtn, DeletePostBtn, EditPostForm, EventSignUpForm, OrganizationInforForm, FilterEventsForm
 from app.funcs import check_organization_status, check_age, check_max_participants_reached, get_random_code, save_picture, check_email, check_password, get_is_organization_value, get_all_organization_objs, encrypt_password, get_all_emails, check_for_not_active_events, string_to_list, send_authentication_email, check_authenticated_email, get_random_colors, check_too_many_events, check_signup_status, get_user_upcoming_events, get_user_completed_events, unique_phonenumber
@@ -57,8 +57,18 @@ def home():
             db.session.commit()
             flash(f"You have been successfully removed from '{event_obj.event_name}'.", "success")
             return redirect(url_for("home"))
+        
+        if filter_form.validate_on_submit():
+            if filter_form.by_date.data == "mm/dd/yyyy":
+                print("here")
+            input_opensearch = filter_form.by_open_search.data
+            input_category = filter_form.by_category.data
+            input_date = filter_form.by_date.data
+            input_location = filter_form.by_location.data
 
-    return render_template("home.html", all_events=all_events, sign_up_form=sign_up_form, filter_form=filter_form, Organization=Organization, len=len, int=int)
+            print("\n\n\n", input_opensearch, input_category, input_date, input_location, "\n\n\n")
+
+    return render_template("home.html", all_events=all_events, sign_up_form=sign_up_form, filter_form=filter_form, Organization=Organization, len=len, int=int, WEBSITE_COLOR=WEBSITE_COLOR)
 
 @app.route("/my_events", methods=["GET", "POST"])
 @login_required
@@ -75,7 +85,7 @@ def my_events():
             flash(f"You have been successfully removed from '{event_obj.event_name}'.", "success")
             return redirect(url_for("home"))
 
-    return render_template("my_events.html", upcoming_events=upcoming_events, completed_events=completed_events, len=len, round=round, int=int)
+    return render_template("my_events.html", upcoming_events=upcoming_events, completed_events=completed_events, len=len, round=round, int=int, WEBSITE_COLOR=WEBSITE_COLOR)
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -104,7 +114,7 @@ def login():
                 flash("You have not registered yet.", "warning")
                 return redirect(url_for("register"))
 
-    return render_template("login.html", form=form)
+    return render_template("login.html", form=form, WEBSITE_COLOR=WEBSITE_COLOR)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -154,7 +164,7 @@ def register():
             flash("You have been sent an email to activate your account. Please check your email and follow the link provided.", "primary")
             return redirect(url_for("home"))
 
-    return render_template("register.html", form=form)
+    return render_template("register.html", form=form, WEBSITE_COLOR=WEBSITE_COLOR)
 
 @app.route("/confirm_email/<token>")
 def confirm_email(token):
@@ -192,7 +202,7 @@ def orginfo(user_id):
                         pass
 
                     if form.org_image.data:
-                        picture_file = save_picture(form.org_image.data)
+                        picture_file = save_picture(form.org_image.data, True)
                         picture_file = str(url_for('static', filename='images/'+picture_file))
                     else:
                         picture_file = str(url_for('static', filename='default_imgs/'+"default_organization.jpg"))
@@ -207,7 +217,7 @@ def orginfo(user_id):
                     flash("Your organization information has been saved.", "success")
                     return redirect(url_for("account"))
 
-            return render_template("orginfo.html", form=form, user_obj=user_obj, page_intro_msg=page_intro_msg)
+            return render_template("orginfo.html", form=form, user_obj=user_obj, page_intro_msg=page_intro_msg, WEBSITE_COLOR=WEBSITE_COLOR)
         
         else:
             organization_obj = Organization.query.filter_by(id=current_user.organization_id).first()
@@ -237,14 +247,14 @@ def orginfo(user_id):
                 if form.org_image.data == None:
                     organization_obj.image = organization_obj.image
                 else:
-                    picture_file = save_picture(form.org_image.data)
+                    picture_file = save_picture(form.org_image.data, True)
                     organization_obj.image = str(url_for('static', filename='images/'+picture_file))
 
                 db.session.commit()
                 flash("Your organization information has been successfully updated.", "success")
                 return redirect(url_for("account"))
             
-            return render_template("orginfo.html", form=form, user_obj=user_obj, page_intro_msg=page_intro_msg)
+            return render_template("orginfo.html", form=form, user_obj=user_obj, page_intro_msg=page_intro_msg, WEBSITE_COLOR=WEBSITE_COLOR)
     
     else:
         flash("You must be an organization administrator to access this page.", "warning")
@@ -289,7 +299,7 @@ def join_organization():
                     flash(f"That code did not match any organizations currently in our database. Please try again or contact your organization.", "warning")
                     return redirect(url_for("join_organization"))
 
-    return render_template("join_organization.html", form=form)
+    return render_template("join_organization.html", form=form, WEBSITE_COLOR=WEBSITE_COLOR)
 
 @app.route("/account", methods=["GET", "POST"])
 @login_required
@@ -395,16 +405,16 @@ def account():
             return redirect(url_for("account"))
 
     if current_user.is_organization and current_user.answered_organization_questions == True:
-        return render_template("account.html", form=form, user_organization_obj=user_organization_obj)
+        return render_template("account.html", form=form, user_organization_obj=user_organization_obj, WEBSITE_COLOR=WEBSITE_COLOR)
     else:
-        return render_template("account.html", form=form, user_organization_obj=user_organization_obj)
+        return render_template("account.html", form=form, user_organization_obj=user_organization_obj, WEBSITE_COLOR=WEBSITE_COLOR)
 
 @app.route("/organizations", methods=["GET", "POST"])
 def organizations():
 
     all_organization_objs = get_all_organization_objs()
 
-    return render_template("organizations.html", all_organization_objs=all_organization_objs, len=len, type=type, list=list)
+    return render_template("organizations.html", all_organization_objs=all_organization_objs, len=len, type=type, list=list, WEBSITE_COLOR=WEBSITE_COLOR)
 
 @app.route("/post", methods=["GET", "POST"])
 @login_required
@@ -419,13 +429,13 @@ def post():
         current_date_output = f"{current_date.month}/{current_date.day}/{current_date.year}"
         current_time = datetime.now().strftime("%H:%M")
 
-        return render_template("post.html", form=form, current_date=current_date_output, current_time=current_time)
+        return render_template("post.html", form=form, current_date=current_date_output, current_time=current_time, WEBSITE_COLOR=WEBSITE_COLOR)
     
     elif request.method == "POST":
         if check_authenticated_email():
             pass
         if form.event_img.data:
-            picture_file = save_picture(form.event_img.data)
+            picture_file = save_picture(form.event_img.data, True)
             picture_file = str(url_for('static', filename='images/'+picture_file))
         else:
             flash("Please provide a valid image that represents your event (image of venue, organization logo, etc.).", "warning")
@@ -489,7 +499,7 @@ def view_posts():
             delete_post_id = request.form.get("delete_from_history")
             return redirect(url_for("delete_post", delete_post_id=delete_post_id))
 
-    return render_template("view_posts.html", active_events=active_events, inactive_events=inactive_events, editbtnform=editbtnform, deletebtnform=deletebtnform, list=list, dict=dict, type=type)
+    return render_template("view_posts.html", active_events=active_events, inactive_events=inactive_events, editbtnform=editbtnform, deletebtnform=deletebtnform, list=list, dict=dict, type=type, WEBSITE_COLOR=WEBSITE_COLOR)
 
 @app.route("/dashboard", methods=["GET", "POST"])
 @login_required
@@ -508,7 +518,7 @@ def dashboard():
             edit_post_id = request.form.get("edit_post_btn")
             return redirect(url_for("edit_post", edit_post_id=edit_post_id))
 
-    return render_template("dashboard.html", all_events=all_events, authorized_admins=authorized_admins, len=len, organization_obj=organization_obj)
+    return render_template("dashboard.html", all_events=all_events, authorized_admins=authorized_admins, len=len, organization_obj=organization_obj, WEBSITE_COLOR=WEBSITE_COLOR)
 
 @app.route("/delete_post/<delete_post_id>")
 @login_required
@@ -588,7 +598,7 @@ def edit_post(edit_post_id):
         if form.event_img.data == None:
             post_obj.event_img = post_obj.event_img
         else:
-            picture_file = save_picture(form.event_img.data)
+            picture_file = save_picture(form.event_img.data, True)
             post_obj.event_img = str(url_for('static', filename='images/'+picture_file))
 
         post_obj.last_updated = str(datetime.now().date().strftime("%b %d, %Y")) + " at " + str(datetime.now().time().strftime("%I:%M:%S %p"))
@@ -598,7 +608,7 @@ def edit_post(edit_post_id):
         flash("Post has been successfully updated.", "success")
         return redirect(url_for("view_posts"))
 
-    return render_template("edit_post.html", form=form, post_startdate=post_startdate, post_enddate=post_enddate, post_starttime=post_starttime, post_endtime=post_endtime)
+    return render_template("edit_post.html", form=form, post_startdate=post_startdate, post_enddate=post_enddate, post_starttime=post_starttime, post_endtime=post_endtime, WEBSITE_COLOR=WEBSITE_COLOR)
 
 @app.route("/logout", methods=["GET", "POST"])
 @login_required

@@ -4,28 +4,28 @@
     <div class="collapse navbar-collapse" id="navbarText">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item active" style="padding-right: 20px;">
-                <div style="color: coral;"><a class="nav-link" href="{{ url_for('home') }}" style="color: coral;">Home<span class="sr-only">(current)</span></a></div>
+                <div style="color: #001F3F;"><a class="nav-link" href="{{ url_for('home') }}" style="color: #001F3F;">Home<span class="sr-only">(current)</span></a></div>
             </li>
             <li class="nav-item" style="padding-right: 20px;">
-                    <a class="nav-link" href="{{ url_for('organizations') }}" style="color: coral;">Organizations</a>
+                    <a class="nav-link" href="{{ url_for('organizations') }}" style="color: #001F3F;">Organizations</a>
             </li>
             {% if current_user.is_organization == False %}
                 <li class="nav-item" style="padding-right: 20px;">
-                    <a class="nav-link" href="{{ url_for('my_events') }}" style="color: coral; border-bottom: solid; border-bottom-color: coral;">My Events</a>
+                    <a class="nav-link" href="{{ url_for('my_events') }}" style="border-bottom: solid; border-bottom-color: #001F3F; color: #001F3F;">My Events</a>
                 </li>
             {% endif %}
         </ul>
         <ul class="navbar-nav ml-auto">
             {% if current_user.is_authenticated %}
                 <li class="nav-item" style="padding-right: 20px;">
-                    <a class="nav-link" href="{{ url_for('account') }}" style="color: coral;">Account</a>
+                    <a class="nav-link" href="{{ url_for('account') }}" style="color: #001F3F;">Account</a>
                 </li>
                 {% if current_user.is_organization and current_user.answered_organization_questions %}
                     <li class="nav-item" style="padding-right: 20px;">
-                        <a class="nav-link" href="{{ url_for('dashboard') }}" style="color: coral;">Dashboard</a>
+                        <a class="nav-link" href="{{ url_for('dashboard') }}" style="color: #001F3F;">Dashboard</a>
                     </li>
                     <li class="nav-item dropdown" style="padding-right: 20px;">
-                        <a style="color: coral;" class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <a style="color: #001F3F;" class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             Post
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -35,14 +35,14 @@
                     </li>
                 {% endif %}
                 <li class="nav-item" style="padding-right: 20px;">
-                    <a class="nav-link" href="{{ url_for('logout') }}" style="color: coral;">Logout</a>
+                    <a class="nav-link" href="{{ url_for('logout') }}" style="color: #001F3F;">Logout</a>
                 </li>
             {% else %}
                 <li class="nav-item" style="padding-right: 20px;">
-                    <a class="nav-link" href="{{ url_for('register') }}" style="color: coral;">Register</a>
+                    <a class="nav-link" href="{{ url_for('register') }}" style="color: #001F3F;">Register</a>
                 </li>
                 <li class="nav-item" style="padding-right: 20px;">
-                    <a class="nav-link" href="{{ url_for('login') }}" style="color: coral;">Login</a>
+                    <a class="nav-link" href="{{ url_for('login') }}" style="color: #001F3F;">Login</a>
                 </li>
             {% endif %}
         </ul>
@@ -51,8 +51,8 @@
 
 {% block main %}
     
-    <div style="padding-bottom: 150px; padding-top: 70px;">
-        <div class="container-fluid">
+    <div style="padding-bottom: 200px;">
+        <div class="container-fluid" style="padding-top: 30px;">
             {% if current_user.is_confirmed == False %}
                 <div class="container border border-danger mb-5 p-4 rounded text-center">
                     <span class="h6">You have not confirmed your email yet. Some actions will be limited.<br>Click <a href="{{ url_for('send_confirmation_email') }}">here</a> to resend the instructions to authenticate your account to your email.</span>
@@ -94,18 +94,18 @@
                                                 <div class="card">
                                                     <div class="card-header">
                                                         <div class="row">
-                                                            {% if int(event.days_until_event) <= round(int(event.days_until_event) * 0.75) %}
+                                                            {% if int(event.days_until_event) >= 7 %}
                                                                 <div class="col-md-5 text-left">
-                                                                    <h5 class="text-danger">
+                                                                    <h5 class="text-success">
                                                                         <b>{{ event.days_until_event }} days until</b>
                                                                     </h5>
                                                                 </div>
                                                                 <div class="col-md-7 text-right">
-                                                                    <h5 class="text-danger">
+                                                                    <h5 class="text-success">
                                                                         <b>{{ event.for_display_event_datetime }}</b>
                                                                     </h5>
                                                                 </div>
-                                                            {% elif int(event.days_until_event) <= round(int(event.days_until_event) * 0.5) %}
+                                                            {% elif int(event.days_until_event) >= 3 %}
                                                                 <div class="col-md-5 text-left">
                                                                     <h5 class="text-warning">
                                                                         <b>{{ event.days_until_event }} days until</b>
@@ -118,12 +118,12 @@
                                                                 </div>
                                                             {% else %}
                                                                 <div class="col-md-5 text-left">
-                                                                    <h5 class="text-success">
+                                                                    <h5 class="text-danger">
                                                                         <b>{{ event.days_until_event }} days until</b>
                                                                     </h5>
                                                                 </div>
                                                                 <div class="col-md-7 text-right">
-                                                                    <h5 class="text-success">
+                                                                    <h5 class="text-danger">
                                                                         <b>{{ event.for_display_event_datetime }}</b>
                                                                     </h5>
                                                                 </div>
@@ -147,7 +147,7 @@
                                                         <p class="card-text"><b>Location:</b> {{ event.event_location }}</p>
                                                         <p class="card-text"><b>Category:</b> {{ event.event_category }}</p>
                                                         <p class="card-text"><b>Description:</b> {{ event.event_description }}</p>
-                                                        <div style="padding-top: 10px;">
+                                                        <div style="padding-top: 30px;" class="text-center">
                                                             <form method="POST" action="" enctype="multipart/form-data">
                                                                 <input id="removefromeventbtn" name="removefromeventbtn" type="hidden" value="{{ event.id }}">
                                                                 <button class="btn btn-danger">Withdraw</button>

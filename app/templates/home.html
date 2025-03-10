@@ -4,28 +4,28 @@
     <div class="collapse navbar-collapse" id="navbarText">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item active" style="padding-right: 20px;">
-                <div style="border-bottom: solid; border-bottom-color: coral; color: coral;"><a class="nav-link" href="{{ url_for('home') }}" style="color: coral;">Home<span class="sr-only">(current)</span></a></div>
+                <div style="border-bottom: solid; border-bottom-color: #001F3F; color: #001F3F;"><a class="nav-link" href="{{ url_for('home') }}" style="color: #001F3F;">Home<span class="sr-only">(current)</span></a></div>
             </li>
             <li class="nav-item" style="padding-right: 20px;">
-                    <a class="nav-link" href="{{ url_for('organizations') }}" style="color: coral;">Organizations</a>
+                <a class="nav-link" href="{{ url_for('organizations') }}" style="color: #001F3F;">Organizations</a>
             </li>
             {% if current_user.is_organization == False %}
                 <li class="nav-item" style="padding-right: 20px;">
-                    <a class="nav-link" href="{{ url_for('my_events') }}" style="color: coral;">My Events</a>
+                    <a class="nav-link" href="{{ url_for('my_events') }}" style="color: #001F3F;">My Events</a>
                 </li>
             {% endif %}
         </ul>
         <ul class="navbar-nav ml-auto">
             {% if current_user.is_authenticated %}
                 <li class="nav-item" style="padding-right: 20px;">
-                    <a class="nav-link" href="{{ url_for('account') }}" style="color: coral;">Account</a>
+                    <a class="nav-link" href="{{ url_for('account') }}" style="color: #001F3F;">Account</a>
                 </li>
                 {% if current_user.is_organization and current_user.answered_organization_questions %}
                     <li class="nav-item" style="padding-right: 20px;">
-                        <a class="nav-link" href="{{ url_for('dashboard') }}" style="color: coral;">Dashboard</a>
+                        <a class="nav-link" href="{{ url_for('dashboard') }}" style="color: #001F3F;">Dashboard</a>
                     </li>
                     <li class="nav-item dropdown" style="padding-right: 20px;">
-                        <a style="color: coral;" class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <a style="color: #001F3F;" class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             Post
                         </a>
                         <div class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -35,14 +35,14 @@
                     </li>
                 {% endif %}
                 <li class="nav-item" style="padding-right: 20px;">
-                    <a class="nav-link" href="{{ url_for('logout') }}" style="color: coral;">Logout</a>
+                    <a class="nav-link" href="{{ url_for('logout') }}" style="color: #001F3F;">Logout</a>
                 </li>
             {% else %}
                 <li class="nav-item" style="padding-right: 20px;">
-                    <a class="nav-link" href="{{ url_for('register') }}" style="color: coral;">Register</a>
+                    <a class="nav-link" href="{{ url_for('register') }}" style="color: #001F3F;">Register</a>
                 </li>
                 <li class="nav-item" style="padding-right: 20px;">
-                    <a class="nav-link" href="{{ url_for('login') }}" style="color: coral;">Login</a>
+                    <a class="nav-link" href="{{ url_for('login') }}" style="color: #001F3F;">Login</a>
                 </li>
             {% endif %}
         </ul>
@@ -126,7 +126,7 @@
                 <form method="POST" action="" enctype="multipart/form-data">
                     {{ filter_form.hidden_tag() }}
                     <div class="row align-items-center text-center">
-                        <div class="col-md-2">
+                        <div class="col-md-1">
                             <span class="h5">Filter:</span>
                         </div>
                         <div class="col-md-3" style="padding: 10px;">
@@ -145,7 +145,7 @@
                                 
                             </div>
                         </div>
-                        <div class="col-md-3" style="padding: 10px;">
+                        <div class="col-md-2" style="padding: 10px;">
                             <div class="form-group">
                                 <small>{{ filter_form.by_category.label(class="form-control-label") }}</small>
                                 {% if filter_form.by_category.errors %}
@@ -160,7 +160,7 @@
                                 {% endif %}
                             </div>
                         </div>
-                        <div class="col-md-3" style="padding: 10px;">
+                        <div class="col-md-2" style="padding: 10px;">
                             <div class="form-group">
                                 <small>{{ filter_form.by_date.label(class="form-control-label") }}</small>
                                 {% if filter_form.by_date.errors %}
@@ -171,7 +171,22 @@
                                         {% endfor %}
                                     </div>
                                 {% else %}
-                                    {{ filter_form.by_date(class="form-control form-control-md") }}
+                                    {{ filter_form.by_date(class="form-control form-control-md", placeholder="mm/dd/yyyy") }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-3" style="padding: 10px;">
+                            <div class="form-group">
+                                <small>{{ filter_form.by_location.label(class="form-control-label") }}</small>
+                                {% if filter_form.by_location.errors %}
+                                    {{ filter_form.by_location(class="form-control form-control-md is-invalid") }}
+                                    <div class="invalid-feedback">
+                                        {% for error in filter_form.by_location.errors %}
+                                            <span>{{ error }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    {{ filter_form.by_location(class="form-control form-control-md") }}
                                 {% endif %}
                             </div>
                         </div>

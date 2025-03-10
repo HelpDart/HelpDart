@@ -43,6 +43,8 @@ login_manager.login_view = 'login'
 
 mail = Mail(app)
 
+WEBSITE_COLOR = "001F3F"
+
 Serializer = URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
 from app import routes

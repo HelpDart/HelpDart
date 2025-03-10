@@ -12,6 +12,21 @@ import os
 from flask_mail import Message
 import random
 
+def validate_category(user_category):
+    if user_category == "Pick a category...":
+        return False
+    
+    return True
+
+def validate_date(user_date):
+    format = "%m/%d/%Y"
+    res = True
+    try:
+        res = bool(datetime.strptime(user_date, format))
+    except ValueError:
+        res = False
+
+    return res
 
 def get_badge_colors():
     badge_colors = ["primary", "secondary", "success", "warning", "info", "danger"]
@@ -103,15 +118,20 @@ def get_random_code(n=6):
     range_end = (10**n)-1
     return randint(range_start, range_end)
 
-def save_picture(form_picture):
+def save_picture(form_picture, for_event_or_org=False):
     random_hex = secrets.token_hex(8)
     _, f_ext = os.path.splitext(form_picture.filename)
     picture_fn = random_hex + str(f_ext)
     picture_path = os.path.join(app.root_path, 'static\images', picture_fn)
-    output_size = (150,150)
-    i = Image.open(form_picture)
-    i.thumbnail(output_size)
-    i.save(picture_path)
+    if for_event_or_org==False:
+        output_size = (150,150)
+        i = Image.open(form_picture)
+        i.thumbnail(output_size)
+        i.save(picture_path)
+    else:
+        i = Image.open(form_picture)
+        i.save(picture_path)
+
     return picture_fn
 
 def check_email(email, check_deliv):
