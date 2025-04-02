@@ -51,248 +51,236 @@
 
 {% block main %}
     
-    <div class="container-fluid" style="padding-bottom: 150px; padding-top: 70px;">
+    <div style="padding-bottom: 150px; padding-top: 70px;">
         <!-- <div class="text-center container">
             <h2 style="color: coral;">HelpDart</h2>
             <hr>
         </div> -->
-        <div class="jumbotron">
-            <div class="container">
-                {% if current_user.is_authenticated %}
-                    {% if current_user.is_organization %}
-                        {% if current_user.is_confirmed == False %}
-                            <div class="border border-danger mb-5 p-4 rounded text-center">
-                                <span class="h6">You have not confirmed your email yet. Some actions will be limited.<br>Click <a href="{{ url_for('send_confirmation_email') }}">here</a> to resend the instructions to authenticate your account to your email.</span>
+        <div class="container-fluid">
+
+            <div class="jumbotron">
+                <div class="container">
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.is_organization %}
+                            {% if current_user.is_confirmed == False %}
+                                <div class="border border-danger mb-5 p-4 rounded text-center">
+                                    <span class="h6">You have not confirmed your email yet. Some actions will be limited.<br>Click <a href="{{ url_for('send_confirmation_email') }}">here</a> to resend the instructions to authenticate your account to your email.</span>
+                                </div>
+                            {% endif %}
+                            <div class="row">
+                                <div class="col-md-8 text-left">
+                                    <span class="display-4">Hello, {{ current_user.full_name }}</span>
+                                </div>
+                                <div class="col-md-4 text-right">
+                                    <span style="padding-left: 55px;" class="text-primary h5">Administrator account</span>
+                                </div>
                             </div>
+                            <hr class="my-4">
+                            <p style="padding-bottom: 8px;">Jump right in by clicking a button below.</p>
+                            <p class="lead">
+                                <span style="padding-right: 10px;"><a class="btn btn-success btn-md" href="{{ url_for('post') }}" role="button">Post a New Event</a></span>
+                                <span style="padding-right: 10px;"><a class="btn btn-primary btn-md" href="{{ url_for('dashboard') }}" role="button">Dashboard</a></span>
+                                <span><a class="btn btn-info btn-md" href="{{ url_for('view_posts') }}" role="button">View My Posts</a></span>
+                            </p>
+                        {% else %}
+                            {% if current_user.is_confirmed == False %}
+                                <div class="border border-danger mb-5 p-4 rounded text-center">
+                                    <span class="h6">You have not confirmed your email yet. Some actions will be limited.<br>Click <a href="{{ url_for('send_confirmation_email') }}">here</a> to resend the instructions to authenticate your account to your email.</span>
+                                </div>
+                            {% endif %}
+                            <div class="row">
+                                <div class="col-md-8 text-left">
+                                    <span class="display-4">Hello, {{ current_user.full_name }}</span>
+                                </div>
+                                <div class="col-md-4 text-right">
+                                    <span style="padding-left: 55px;" class="text-primary h5">Personal account</span>
+                                </div>
+                            </div>
+                            <hr class="my-4">
+                            <p style="padding-bottom: 8px;">Jump right in by clicking a button below.</p>
+                            <p class="lead">
+                                <span style="padding-right: 10px;"><a class="btn btn-success btn-md" href="{{ url_for('account') }}" role="button">View My Profile</a></span>
+                                <span style="padding-right: 10px;"><a class="btn btn-primary btn-md" href="{{ url_for('my_events') }}" role="button">View My Events</a></span>
+                            </p>
                         {% endif %}
-                        <div class="row">
-                            <div class="col-md-8 text-left">
-                                <span class="display-4">Hello, {{ current_user.full_name }}</span>
-                            </div>
-                            <div class="col-md-4 text-right">
-                                <span style="padding-left: 55px;" class="text-primary h5">Administrator account</span>
-                            </div>
-                        </div>
-                        <hr class="my-4">
-                        <p style="padding-bottom: 8px;">Jump right in by clicking a button below.</p>
-                        <p class="lead">
-                            <span style="padding-right: 10px;"><a class="btn btn-success btn-md" href="{{ url_for('post') }}" role="button">Post a New Event</a></span>
-                            <span style="padding-right: 10px;"><a class="btn btn-primary btn-md" href="{{ url_for('dashboard') }}" role="button">Dashboard</a></span>
-                            <span><a class="btn btn-info btn-md" href="{{ url_for('view_posts') }}" role="button">View My Posts</a></span>
-                        </p>
                     {% else %}
-                        {% if current_user.is_confirmed == False %}
-                            <div class="border border-danger mb-5 p-4 rounded text-center">
-                                <span class="h6">You have not confirmed your email yet. Some actions will be limited.<br>Click <a href="{{ url_for('send_confirmation_email') }}">here</a> to resend the instructions to authenticate your account to your email.</span>
-                            </div>
-                        {% endif %}
-                        <div class="row">
-                            <div class="col-md-8 text-left">
-                                <span class="display-4">Hello, {{ current_user.full_name }}</span>
-                            </div>
-                            <div class="col-md-4 text-right">
-                                <span style="padding-left: 55px;" class="text-primary h5">Personal account</span>
-                            </div>
-                        </div>
+                        <h1 class="display-4">Welcome</h1>
+                        <p class="lead" style="padding-top: 20px;">View currently active events below. View organizations currently in our database <a href="{{ url_for('organizations') }}">here</a>.</p>
                         <hr class="my-4">
-                        <p style="padding-bottom: 8px;">Jump right in by clicking a button below.</p>
+                        <p>You must be registered to sign up for events.</p>
                         <p class="lead">
-                            <span style="padding-right: 10px;"><a class="btn btn-success btn-md" href="{{ url_for('account') }}" role="button">View My Profile</a></span>
-                            <span style="padding-right: 10px;"><a class="btn btn-primary btn-md" href="{{ url_for('my_events') }}" role="button">View My Events</a></span>
+                            <a class="btn btn-primary btn-md" href="{{ url_for('register') }}" role="button">Register</a>
                         </p>
                     {% endif %}
-                {% else %}
-                    <h1 class="display-4">Welcome</h1>
-                    <p class="lead" style="padding-top: 20px;">View currently active events below. View organizations currently in our database <a href="{{ url_for('organizations') }}">here</a>.</p>
-                    <hr class="my-4">
-                    <p>You must be registered to sign up for events.</p>
-                    <p class="lead">
-                        <a class="btn btn-primary btn-md" href="{{ url_for('register') }}" role="button">Register</a>
-                    </p>
-                {% endif %}
+                </div>
             </div>
-        </div>
-        {% if all_events == [] %}
-            <div class="container text-center border-bottom" style="padding-top: 20px;">
-                <p>There are no events to currently display at this time. Please try again later.</p>
-            </div>
-        {% else %}
-        <div class="container">
-            <div class="text-center">
-                <p class="h4" style="padding: 20px;" id="all_events">Events</p>
+            {% if all_events == [] %}
+                <div class="container text-center border-bottom" style="padding-top: 20px;">
+                    <p>There are no events to currently display at this time. Please try again later.</p>
+                </div>
+            {% else %}
+            <div class="container">
+                <div class="text-center">
+                    <p class="h4" style="padding: 20px;" id="all_events">Events</p>
+                    <div><hr></div>
+                </div>
+                <div style="padding-left: 30px; padding-right: 30px;">
+                    <form method="POST" action="" enctype="multipart/form-data">
+                        {{ filter_form.hidden_tag() }}
+                        <div class="row align-items-center text-center">
+                            <div class="col-md-1">
+                                <span class="h5">Filter:</span>
+                            </div>
+                            <div class="col-md-3" style="padding: 10px;">
+                                <div class="form-group">
+                                    <small>{{ filter_form.by_open_search.label(class="form-control-label") }}</small>
+                                    {% if filter_form.by_open_search.errors %}
+                                        {{ filter_form.by_open_search(class="form-control form-control-md is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in filter_form.by_open_search.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ filter_form.by_open_search(class="form-control form-control-md", placeholder="Search...") }}
+                                    {% endif %}
+                                    
+                                </div>
+                            </div>
+                            <div class="col-md-3" style="padding: 10px;">
+                                <div class="form-group">
+                                    <small>{{ filter_form.by_category.label(class="form-control-label") }}</small>
+                                    {% if filter_form.by_category.errors %}
+                                        {{ filter_form.by_category(class="form-control form-control-md is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in filter_form.by_category.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ filter_form.by_category(class="form-control form-control-md") }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3" style="padding: 10px;">
+                                <div class="form-group">
+                                    <small>{{ filter_form.by_date.label(class="form-control-label") }}</small>
+                                    {% if filter_form.by_date.errors %}
+                                        {{ filter_form.by_date(class="form-control form-control-md is-invalid") }}
+                                        <div class="invalid-feedback">
+                                            {% for error in filter_form.by_date.errors %}
+                                                <span>{{ error }}</span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        {{ filter_form.by_date(class="form-control form-control-md", placeholder="mm/dd/yyyy") }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-2" style="padding-left: 40px;">
+                                <div class="form-group">
+                                    {{ filter_form.save(class="btn btn-success btn-md") }}
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
                 <div><hr></div>
-            </div>
-            <div style="padding-left: 30px; padding-right: 30px;">
-                <form method="POST" action="" enctype="multipart/form-data">
-                    {{ filter_form.hidden_tag() }}
-                    <div class="row align-items-center text-center">
-                        <div class="col-md-1">
-                            <span class="h5">Filter:</span>
-                        </div>
-                        <div class="col-md-3" style="padding: 10px;">
-                            <div class="form-group">
-                                <small>{{ filter_form.by_open_search.label(class="form-control-label") }}</small>
-                                {% if filter_form.by_open_search.errors %}
-                                    {{ filter_form.by_open_search(class="form-control form-control-md is-invalid") }}
-                                    <div class="invalid-feedback">
-                                        {% for error in filter_form.by_open_search.errors %}
-                                            <span>{{ error }}</span>
+                <div class="row justify-content-center" style="padding-left: 75px; padding-right: 75px; padding-top: 30px;">
+                    {% for event in all_events %}
+                        <div class="col-md-6 text-center" style="padding: 20px;">
+                            <div class="card">
+                                <div class="card-header">
+                                    <span class=text-center>
+                                        {% for kw_obj in event.keywords %}
+                                            <span class="badge badge-{{ kw_obj.color }}">{{ kw_obj.phrase }}</span>
                                         {% endfor %}
+                                    </span>
+                                </div>
+                                <div>
+                                    <img src="{{ event.event_img }}" class="card-img-top" style="width: 100%; height: 15vw; object-fit: cover;">
+                                </div>
+                                <div class="card-header">
+                                    <span style="font-size: large;">{{ (Organization.query.filter_by(id=event.organization_id).first()).organization_name }}</span> <span style="padding-left: 15px;"><small><a href="{{ url_for('organizations') }}#{{ (Organization.query.filter_by(id=event.organization_id).first()).organization_name }}">(View Organization)</a></small></span>
+                                </div>
+                                <div class="card-body">
+                                    
+                                    <h5 class="card-title">{{ event.event_name }}</h5>
+                                    <p class="card-text">
+                                        {{ event.event_category }} | {{ event.event_min_age }} to {{ event.event_max_age }} yrs old
+                                    </p>
+                                    <p class="card-text border p-3" style="padding: 10px;">
+                                        <b style="padding-right: 10px;">{{ event.for_display_event_datetime }}</b>
+                                        <br>
+                                        <span class="text-info h6">
+                                            {% if current_user in event.registrees %}
+                                                <span class="text-muted">{{ int(event.event_max_volunteers) - len(event.registrees) }} spots left</span>
+                                            {% else %}
+                                                {% if int(event.days_until_event) >= 7 %}
+                                                    <span class="text-success">{{ event.days_until_event }} days until event</span>
+                                                {% elif int(event.days_until_event) >= 3 %}
+                                                    <span class="text-warning">{{ event.days_until_event }} days until event</span>
+                                                {% else %}
+                                                    <span class="text-danger">{{ event.days_until_event }} days until event</span>
+                                                {% endif %}
+                                            {% endif %}
+                                    </p>
+                                </div>
+
+                                {% if current_user.is_authenticated %}
+                                    <div class="card-footer">
+                                        {% if current_user.is_organization == False %}
+                                            {% if current_user in event.registrees %}
+                                                <div style="padding-right: 20px; padding-left: 10px;">
+                                                    <form method="POST" action="" enctype="multipart/form-data">
+                                                        <input id="removefromeventbtn" name="removefromeventbtn" type="hidden" value="{{ event.id }}">
+                                                        <button class="btn btn-danger">Withdraw</button>
+                                                    </form>
+                                                </div>
+                                            {% else %}
+                                                <div style="padding-right: 20px; padding-left: 10px;">
+                                                    <form method="POST" action="" enctype="multipart/form-data">
+                                                        <input id="signupforeventbtn" name="signupforeventbtn" type="hidden" value="{{ event.id }}">
+                                                        {{ sign_up_form.signup(class="btn btn-success") }}
+                                                    </form>
+                                                </div>
+                                            {% endif %}
+                                        {% else %}
+                                            <div class="row">
+                                                <div class="col-md-3"></div>
+                                                <div class="col-md-6">
+                                                    <a class="btn btn-primary" href="{{ url_for('dashboard') }}#{{ event.event_name }}">View on Dashboard</a>
+                                                </div>
+                                                <div class="col-md-3"></div>
+                                            </div>
+                                        {% endif %}
                                     </div>
-                                {% else %}
-                                    {{ filter_form.by_open_search(class="form-control form-control-md", placeholder="Search...") }}
-                                {% endif %}
-                                
-                            </div>
-                        </div>
-                        <div class="col-md-2" style="padding: 10px;">
-                            <div class="form-group">
-                                <small>{{ filter_form.by_category.label(class="form-control-label") }}</small>
-                                {% if filter_form.by_category.errors %}
-                                    {{ filter_form.by_category(class="form-control form-control-md is-invalid") }}
-                                    <div class="invalid-feedback">
-                                        {% for error in filter_form.by_category.errors %}
-                                            <span>{{ error }}</span>
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    {{ filter_form.by_category(class="form-control form-control-md") }}
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-2" style="padding: 10px;">
-                            <div class="form-group">
-                                <small>{{ filter_form.by_date.label(class="form-control-label") }}</small>
-                                {% if filter_form.by_date.errors %}
-                                    {{ filter_form.by_date(class="form-control form-control-md is-invalid") }}
-                                    <div class="invalid-feedback">
-                                        {% for error in filter_form.by_date.errors %}
-                                            <span>{{ error }}</span>
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    {{ filter_form.by_date(class="form-control form-control-md", placeholder="mm/dd/yyyy") }}
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-3" style="padding: 10px;">
-                            <div class="form-group">
-                                <small>{{ filter_form.by_location.label(class="form-control-label") }}</small>
-                                {% if filter_form.by_location.errors %}
-                                    {{ filter_form.by_location(class="form-control form-control-md is-invalid") }}
-                                    <div class="invalid-feedback">
-                                        {% for error in filter_form.by_location.errors %}
-                                            <span>{{ error }}</span>
-                                        {% endfor %}
-                                    </div>
-                                {% else %}
-                                    {{ filter_form.by_location(class="form-control form-control-md") }}
-                                {% endif %}
-                            </div>
-                        </div>
-                        <div class="col-md-1" style="padding-left: 40px;">
-                            <div class="form-group">
-                                {{ filter_form.save(class="btn btn-success btn-md") }}
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div><hr></div>
-            <div class="row justify-content-center" style="padding-left: 75px; padding-right: 75px; padding-top: 30px;">
-                {% for event in all_events %}
-                    <div class="col-md-6 text-center" style="padding: 20px;">
-                        <div class="card">
-                            <div class="card-header">
-                                <span class=text-center>
-                                    {% for kw_obj in event.keywords %}
-                                        <span class="badge badge-{{ kw_obj.color }}">{{ kw_obj.phrase }}</span>
-                                    {% endfor %}
-                                </span>
-                            </div>
-                            <div>
-                                <img src="{{ event.event_img }}" class="card-img-top" style="width: 100%; height: 15vw; object-fit: cover;">
-                            </div>
-                            <div class="card-header">
-                                <span style="font-size: large;">{{ (Organization.query.filter_by(id=event.organization_id).first()).organization_name }}</span> <span style="padding-left: 15px;"><small><a href="{{ url_for('organizations') }}#{{ (Organization.query.filter_by(id=event.organization_id).first()).organization_name }}">(View Organization)</a></small></span>
-                            </div>
-                            <div class="card-body">
-                                
-                                <h5 class="card-title">{{ event.event_name }}</h5>
-                                <p class="card-text">
-                                    {{ event.event_category }} | {{ event.event_min_age }} to {{ event.event_max_age }} yrs old
-                                </p>
-                                <p class="card-text border p-3" style="padding: 10px;">
-                                    <b style="padding-right: 10px;">{{ event.for_display_event_datetime }}</b>
-                                    <br>
-                                    <span class="text-info h6">
+                                    <div class="card-footer">
                                         {% if current_user in event.registrees %}
                                             <span class="text-muted">{{ int(event.event_max_volunteers) - len(event.registrees) }} spots left</span>
                                         {% else %}
-                                            {% if int(event.days_until_event) >= 7 %}
-                                                <span class="text-success">{{ event.days_until_event }} days until event</span>
-                                            {% elif int(event.days_until_event) >= 3 %}
-                                                <span class="text-warning">{{ event.days_until_event }} days until event</span>
+                                            {% if int(event.event_max_volunteers) - len(event.registrees) >= (int(event.event_max_volunteers))/2 %}
+                                                <span class="text-success">{{ int(event.event_max_volunteers) - len(event.registrees) }} open spots</span>
+                                            {% elif int(event.event_max_volunteers) - len(event.registrees) <= (int(event.event_max_volunteers)) * 0.75 %}
+                                                <span class="text-danger">{{ int(event.event_max_volunteers) - len(event.registrees) }} open spots</span>
                                             {% else %}
-                                                <span class="text-danger">{{ event.days_until_event }} days until event</span>
+                                                <span class="text-warning">{{ int(event.event_max_volunteers) - len(event.registrees) }} open spots</span>
                                             {% endif %}
                                         {% endif %}
-                                </p>
+                                    </div> 
+                                {% else %}
+                                    <div class="card-footer">
+                                        <span class="text-muted">You must be logged in to sign up for events.</span>
+                                    </div>
+                                {% endif %}
                             </div>
-
-                            {% if current_user.is_authenticated %}
-                                <div class="card-footer">
-                                    {% if current_user.is_organization == False %}
-                                        {% if current_user in event.registrees %}
-                                            <div style="padding-right: 20px; padding-left: 10px;">
-                                                <form method="POST" action="" enctype="multipart/form-data">
-                                                    <input id="removefromeventbtn" name="removefromeventbtn" type="hidden" value="{{ event.id }}">
-                                                    <button class="btn btn-danger">Withdraw</button>
-                                                </form>
-                                            </div>
-                                        {% else %}
-                                            <div style="padding-right: 20px; padding-left: 10px;">
-                                                <form method="POST" action="" enctype="multipart/form-data">
-                                                    <input id="signupforeventbtn" name="signupforeventbtn" type="hidden" value="{{ event.id }}">
-                                                    {{ sign_up_form.signup(class="btn btn-success") }}
-                                                </form>
-                                            </div>
-                                        {% endif %}
-                                    {% else %}
-                                        <div class="row">
-                                            <div class="col-md-3"></div>
-                                            <div class="col-md-6">
-                                                <a class="btn btn-primary" href="{{ url_for('dashboard') }}#{{ event.event_name }}">View on Dashboard</a>
-                                            </div>
-                                            <div class="col-md-3"></div>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                <div class="card-footer">
-                                    {% if current_user in event.registrees %}
-                                        <span class="text-muted">{{ int(event.event_max_volunteers) - len(event.registrees) }} spots left</span>
-                                    {% else %}
-                                        {% if int(event.event_max_volunteers) - len(event.registrees) >= (int(event.event_max_volunteers))/2 %}
-                                            <span class="text-success">{{ int(event.event_max_volunteers) - len(event.registrees) }} open spots</span>
-                                        {% elif int(event.event_max_volunteers) - len(event.registrees) <= (int(event.event_max_volunteers)) * 0.75 %}
-                                            <span class="text-danger">{{ int(event.event_max_volunteers) - len(event.registrees) }} open spots</span>
-                                        {% else %}
-                                            <span class="text-warning">{{ int(event.event_max_volunteers) - len(event.registrees) }} open spots</span>
-                                        {% endif %}
-                                    {% endif %}
-                                </div> 
-                            {% else %}
-                                <div class="card-footer">
-                                    <span class="text-muted">You must be logged in to sign up for events.</span>
-                                </div>
-                            {% endif %}
                         </div>
-                    </div>
-                {% endfor %}
+                    {% endfor %}
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
+            
         </div>
-        
     </div>
 
 {% endblock main %}

@@ -11,6 +11,45 @@ import bcrypt
 import os
 from flask_mail import Message
 import random
+from flask_login import login_user
+
+def db_reset(sign_in_as):
+    db.drop_all()
+    db.create_all()
+
+    create_admin = Client(is_organization=True, is_confirmed=True, full_name="Admin", date_of_birth="01/23/2003", email="admin@gmail.com", phonenumber="2242270113", affiliated_area="Chicago, Illinois", password=encrypt_password("password1"), profile_pic=str(url_for('static', filename='default_imgs/'+"default_user.jpg")), answered_organization_questions=True, organization_id=1)
+    create_user = Client(is_organization=False, is_confirmed=True, full_name="User", date_of_birth="05/11/2007", email="user@gmail.com", phonenumber="6368991252", affiliated_area="Chicago, Illinois", password=encrypt_password("password2"), profile_pic=str(url_for('static', filename='default_imgs/'+"default_user.jpg")))
+    
+    db.session.add(create_admin)
+    db.session.add(create_user)
+
+    db.session.commit()
+
+    if sign_in_as == "User":
+        login_user(Client.query.filter_by(email="user@gmail.com").first())
+    elif sign_in_as == "Admin":
+        login_user(Client.query.filter_by(email="admin@gmail.com").first())
+
+    create_organization = Organization(organization_name="Organization", primary_location="Chicago, IL", mission_statement="Empowering the upcoming generation, one event at a time.", email_contact="organization@gmail.com", phonenumber_contact="8471120324", website_link="https://www.google.com/", image=str(url_for('static', filename='default_imgs/'+"default_organization.jpg")), security_code="123456")
+    db.session.add(create_organization)
+    org_obj = Organization.query.filter_by(id=1).first()
+    list(org_obj.administrators).append(Client.query.filter_by(email="admin@gmail.com"))
+
+    db.session.commit()
+
+def db_create_event():
+    current_post_time = datetime.now().strftime("%I:%M:%S %p")
+    current_post_date = date.today().strftime("%b %d, %Y")
+
+    new_event = Event(event_name="Dummy Event", event_startdate="12/10/2025", event_enddate="12/10/2025", event_starttime="8:00 AM", event_endtime="2:00 PM", event_location="1500 Longwood Drive, Algonquin IL, 502123", event_max_volunteers="10", event_min_age="15", event_max_age="18", event_category="Religious", event_description="Come help out!", event_keywords="Friendly, energetic", event_img=str(url_for('static', filename='default_imgs/'+"default_event.jpeg")), post_date=current_post_date, post_time=current_post_time, organization_id=current_user.organization_id)
+    db.session.add(new_event)
+    db.session.commit()
+    rand_colors = get_random_colors(len(string_to_list(new_event.keywords)))
+    for i in rand_colors:
+        new_kw = Keyword(phrase=str(string_to_list(new_event.keywords)[rand_colors.index(i)]), color=str(i), event_id=new_event.id)
+        db.session.add(new_kw)
+        list(new_event.keywords).append(new_kw)
+    db.session.commit()
 
 def validate_category(user_category):
     if user_category == "Pick a category...":

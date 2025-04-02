@@ -4,14 +4,14 @@
     <div class="collapse navbar-collapse" id="navbarText">
         <ul class="navbar-nav mr-auto">
             <li class="nav-item" style="padding-right: 20px;">
-                <a class="nav-link" href="{{ url_for('home') }}" style="color: coral;">Home</a>
+                <a class="nav-link" href="{{ url_for('home') }}" style="color: #001F3F;">Home</a>
             </li>
             <li class="nav-item" style="padding-right: 20px;">
-                <a class="nav-link" href="{{ url_for('organizations') }}" style="color: coral;">Organizations</a>
+                <a class="nav-link" href="{{ url_for('organizations') }}" style="color: #001F3F;">Organizations</a>
             </li>
             {% if current_user.is_organization == False %}
                 <li class="nav-item" style="padding-right: 20px;">
-                    <a class="nav-link" href="{{ url_for('my_events') }}" style="color: coral;">My Events</a>
+                    <a class="nav-link" href="{{ url_for('my_events') }}" style="color: #001F3F;">My Events</a>
                 </li>
             {% endif %}
         </ul>
@@ -54,7 +54,7 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="d-flex flex-row align-items-center">
-                <h2 class="mt-1" style="color: coral;">Create a New Post</h2>
+                <h2 class="mt-1" style="color: #001F3F;">Create a New Post</h2>
             </div> <a href="{{ url_for('view_posts') }}" type="button" class="text-center btn btn-small btn-info">View Posts</a>
         </div>
         <hr>

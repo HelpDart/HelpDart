@@ -9,28 +9,19 @@
             <li class="nav-item" style="padding-right: 20px;">
                 <a class="nav-link" href="{{ url_for('organizations') }}" style="color: #001F3F;">Organizations</a>
             </li>
-            {% if current_user.is_organization == False and current_user.is_authenticated == True %}
+            {% if current_user.is_organization == False %}
                 <li class="nav-item" style="padding-right: 20px;">
                     <a class="nav-link" href="{{ url_for('my_events') }}" style="color: #001F3F;">My Events</a>
                 </li>
             {% endif %}
         </ul>
         <ul class="navbar-nav ml-auto">
-            {% if current_user.is_authenticated %}
-                <li class="nav-item" style="padding-right: 20px;">
-                    <a class="nav-link" href="{{ url_for('account') }}" style="color: #001F3F;">Account</a>
-                </li>
-                <li class="nav-item" style="padding-right: 20px;">
-                    <a class="nav-link" href="{{ url_for('logout') }}" style="color: #001F3F;">Logout</a>
-                </li>
-            {% else %}
-                <li class="nav-item active" style="padding-right: 20px;">
-                    <div style="border-bottom: solid; border-bottom-color: #001F3F;"><a class="nav-link" href="{{ url_for('register') }}" style="color: #001F3F;">Register<span class="sr-only">(current)</span></a></div>
-                </li>
-                <li class="nav-item" style="padding-right: 20px;">
-                    <a class="nav-link" href="{{ url_for('login') }}" style="color: #001F3F;">Login</a>
-                </li>
-            {% endif %}
+            <li class="nav-item" style="padding-right: 20px;">
+                <a class="nav-link" href="{{ url_for('register') }}" style="color: #001F3F; border-bottom: solid; border-bottom-color: #001F3F;">Register</a>
+            </li>
+            <li class="nav-item" style="padding-right: 20px;">
+                <a class="nav-link" href="{{ url_for('login') }}" style="color: #001F3F;">Login</a>
+            </li>
         </ul>
     </div>
 {% endblock navbar_links %}
@@ -39,7 +30,7 @@
     
     <div class="container" style="padding-bottom: 100px;">
         <div class="text-center">
-            <h2 style="color: coral;">Register</h2>
+            <h2 style="color: #001F3F;">Register</h2>
             <hr>
             <small>If you are registering as an organization, fill out your personal information below as an administrator first. Afterwards, you will be prompted to create your organization.</small>
         </div>
@@ -144,7 +135,7 @@
                     </div>
                     <div class="form-group">
                         <input type="checkbox" id="is_organization" name="is_organization" value="organization">
-                        <label for="is_organization"></label>I am an administrator for an organization<br>
+                        <label for="is_organization"></label>I would like to proceed as an administrator for an organization.<br>
                     </div>
                 </fieldset>
                 <div class="form-group">

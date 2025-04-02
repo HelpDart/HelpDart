@@ -94,7 +94,7 @@
             {% if current_user.is_confirmed == False %}
                 <div class="border border-primary p-4">
                     <div class="text-left">
-                        <h2 style="color: coral;">Email Not Confirmed Yet</h2>
+                        <h2 style="color: #001F3F;">Email Not Confirmed Yet</h2>
                         <hr>
                     </div>
                     <div>
@@ -110,7 +110,7 @@
                 <div style="padding-top: 10px;"><hr></div>
             {% endif %}
             <div class="text-left">
-                <h2 style="color: coral; padding-top: 30px;">Update Account Information</h2>
+                <h2 style="color: #001F3F; padding-top: 30px;">Update Account Information</h2>
                 <hr>
             </div>
             <div style="padding-top: 35px;">
@@ -196,7 +196,7 @@
         {% if current_user.is_organization == True and current_user.answered_organization_questions == True %}
             {% if user_organization_obj != None %}
                 <div class="text-left" style="padding-top: 30px;">
-                    <span class="h2" style="padding-right: 30px; color: coral;">My Organization</span><br><span class="text-muted">You are an administrator for this organization</span>
+                    <span class="h2" style="padding-right: 30px; color: #001F3F;">My Organization</span><br><span class="text-muted">You are an administrator for this organization</span>
                     <hr>
                 </div>
                 <div style="padding-top: 40px;">
@@ -229,7 +229,7 @@
         {% else %}
             {% if current_user.is_organization == True and current_user.answered_organization_questions == False %}
                 <div class="text-left" style="padding-top: 30px;">
-                    <span class="h2" style="padding-right: 30px; color: coral;">My Organization</span>
+                    <span class="h2" style="padding-right: 30px; color: #001F3F;">My Organization</span>
                     <span class="text-muted">
                         {% if current_user.answered_organization_questions %}
                             You are an administrator for this organization

@@ -80,9 +80,21 @@ class Event(db.Model, UserMixin):
     keywords = db.relationship("Keyword", backref="keywords")
     organization_id = db.Column(db.Integer, db.ForeignKey('organization.id'))
     registrees = db.relationship("Client", backref="registree")
+    requests = db.relationship("SignUpRequest", backref="requests")
 
     def __repr__(self):
         return f"\n\n{self.event_name}: Organization ID: {self.organization_id}\n\n"
+
+class SignUpRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    accepted = db.Column(db.Boolean, default=False)
+    accepted_by = db.Column(db.String(120), default=None)
+    
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('client.id'))
+
+    def __repr__(self):
+        return f"{Event.query.filter_by(id=self.event_id).first().event_name}, {Client.query.filter_by(id=self.user_id).first().full_name}, {self.accepted}"
 
 class Keyword(db.Model):
     id = db.Column(db.Integer, primary_key=True)

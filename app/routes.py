@@ -1,13 +1,14 @@
 from app import app, db, Serializer, WEBSITE_COLOR
-from app.models import Client, Organization, Event, Keyword
+from app.models import Client, Organization, Event, Keyword, SignUpRequest
 from app.forms import LoginForm, RegisterForm, UpdateAccountForm, JoinExistingOrganizationForm, CreateNewPostForm, EditPostBtn, DeletePostBtn, EditPostForm, EventSignUpForm, OrganizationInforForm, FilterEventsForm
-from app.funcs import check_organization_status, check_age, check_max_participants_reached, get_random_code, save_picture, check_email, check_password, get_is_organization_value, get_all_organization_objs, encrypt_password, get_all_emails, check_for_not_active_events, string_to_list, send_authentication_email, check_authenticated_email, get_random_colors, check_too_many_events, check_signup_status, get_user_upcoming_events, get_user_completed_events, unique_phonenumber
+from app.funcs import check_organization_status, check_age, check_max_participants_reached, get_random_code, save_picture, check_email, check_password, get_is_organization_value, get_all_organization_objs, encrypt_password, get_all_emails, check_for_not_active_events, string_to_list, send_authentication_email, check_authenticated_email, get_random_colors, check_too_many_events, check_signup_status, get_user_upcoming_events, get_user_completed_events, unique_phonenumber, db_reset
 from flask import render_template, flash, request, redirect, url_for
 from flask_login import login_user, login_required, logout_user, current_user
 from datetime import date, datetime
 import bcrypt
 from itsdangerous import SignatureExpired, BadTimeSignature
 
+DEVELOPER_PIN = 312253
 
 @app.route("/", methods=["GET", "POST"])    
 @app.route("/home", methods=["GET", "POST"])
@@ -44,10 +45,15 @@ def home():
                 return redirect(url_for("home"))
             else:
                 event_obj.registrees.append(current_user)
-                db.session.commit()
 
                 event_dt_obj = datetime(int((event_obj.event_startdate)[0:4]), int((event_obj.event_startdate)[5:7]), int((event_obj.event_startdate)[8:]))
                 output_edtobj = event_dt_obj.strftime(f"%A, %b %d")
+                
+                new_request = SignUpRequest(accepted=False, accepted_by=None, event_id=event_obj.id, user_id=current_user.id)
+                db.session.add(new_request)
+                
+                db.session.commit()
+                
                 flash(f"You have been registered for '{event_obj.event_name}' on {str(output_edtobj)}.", "success")
                 return redirect(url_for("my_events"))
 
@@ -152,7 +158,7 @@ def register():
             flash("Your passwords do not match. Please try again.", "warning")
             return redirect(url_for("register"))
         elif datetime(int(user_dob[0:4]), int(user_dob[5:7]), int(user_dob[8:])) > datetime(int(str(date.today())[0:4]), int(str(date.today())[5:7]), int(str(date.today())[8:])):
-            flash("That is an invalid date of birth. Please try again.", "warning")
+            flash("That is an invalid date of birth. Please try again with the correct format.", "warning")
             return redirect(url_for("register"))
         else:
             new_user = Client(is_organization=user_is_organization, is_confirmed=False, full_name=user_fullname, date_of_birth=user_dob, email=user_email, phonenumber=user_phonenumber, affiliated_area=form.affiliated_area.data, password=encrypt_password(user_password), profile_pic=picture_file)
@@ -615,4 +621,25 @@ def edit_post(edit_post_id):
 def logout():
     logout_user()
     flash("You have been successfully logged out.", "success")
+    return redirect(url_for("home"))
+
+@app.route("/developer_db_reset/<pin>", methods=["GET", "POST"])
+def developer_db_reset(pin):
+    if int(pin) == int(DEVELOPER_PIN):
+        db_reset("Admin")
+
+    return redirect(url_for("home"))
+
+@app.route("/developer_sign_in_as_user/<pin>", methods=["GET", "POST"])
+def developer_sign_in_as_user(pin):
+    logout_user()
+    login_user(Client.query.filter_by(email="user@gmail.com").first())
+
+    return redirect(url_for("home"))
+
+@app.route("/developer_sign_in_as_admin/<pin>", methods=["GET", "POST"])
+def developer_sign_in_as_admin(pin):
+    logout_user()
+    login_user(Client.query.filter_by(email="admin@gmail.com").first())
+
     return redirect(url_for("home"))
